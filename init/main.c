@@ -58,7 +58,7 @@ static void init_pcb()
 		pcb[i].type = sched1_tasks[i]->type;
 		pcb[i].kernel_stack_top = (uint32_t)(STACK_TOP - i * KN_STACK_SIZE);
 		pcb[i].parent = NULL;
-		pcb[i].kernel_context.regs[0] = 1;
+		pcb[i].kernel_context.regs[0] = 1; /* new process */
 		pcb[i].kernel_context.regs[29] = pcb[i].kernel_stack_top;
 		pcb[i].kernel_context.regs[31] = (uint32_t)sched1_tasks[i]->entry_point;
 		pcb[i].status = TASK_READY;

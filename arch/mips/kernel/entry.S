@@ -24,11 +24,9 @@ END(asm_start)
 
 .macro SAVE_CONTEXT offset
     	// TODO save context
-	addiu	sp, sp, -16
-	sw	AT, 12(sp)	# AT 入栈，防止引用current_running时修改
-	sw	ra, 8(sp)	# ra ֵ入栈，做为PCB基址
-	lw	ra, current_running 
-	lw	AT, 12(sp)	# AT 出栈
+	addiu	sp, sp, -8
+	sw	ra, 4(sp)		# ra ֵ入栈
+	lw	ra, current_running 	# ra 做为PCB基址
 	addiu	ra, ra, \offset
 	sw	$0, (ra)
 	sw	$1, 4(ra)
@@ -61,8 +59,8 @@ END(asm_start)
 	sw	$28, 112(ra)
 	sw	$30, 120(ra)
 	move 	t2, ra
-	lw	ra, 8(sp)	# ra 出栈
-	addiu	sp, sp, 16 	# 回调 sp
+	lw	ra, 4(sp)	# ra 出栈
+	addiu	sp, sp, 8	# 回调 sp
 	sw	$29, 116(t2)
 	sw	$31, 124(t2)
 .endm
