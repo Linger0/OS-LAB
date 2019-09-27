@@ -128,7 +128,7 @@ void do_scheduler(void);
 void do_sleep(uint32_t);
 
 void do_block(queue_t *);
-void do_unblock_one(queue_t *);
+int do_unblock_one(queue_t *);
 void do_unblock_all(queue_t *);
 
 #endif

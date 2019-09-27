@@ -23,9 +23,7 @@ static void check_sleeping()
 void scheduler(void)
 {
 	// Modify the current_running pointer.
-	if (current_running->status == TASK_BLOCKED) 
-		queue_push(&block_queue, current_running);
-	else {
+	if (current_running->status == TASK_RUNNING) {
 		current_running->status = TASK_READY;
 		queue_push(&ready_queue, current_running);
 	}
@@ -43,19 +41,21 @@ void do_block(queue_t *queue)
 {
     	// block the current_running task into the queue
 	current_running->status = TASK_BLOCKED;
+	queue_push(queue, current_running);
 	do_scheduler();
 }
 
-void do_unblock_one(queue_t *queue)
+int do_unblock_one(queue_t *queue)
 {
 	// unblock the head task from the queue
-	if (queue_is_empty(queue)) return;
+	if (queue_is_empty(queue)) return 0;
 	else {
 		pcb_t *unblock_process;
 		unblock_process = queue_dequeue(queue);
 		unblock_process->status = TASK_READY;
 		queue_push(&ready_queue, unblock_process);
 	}
+	return 1;
 }
 
 void do_unblock_all(queue_t *queue)
