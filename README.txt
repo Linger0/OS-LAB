@@ -1,20 +1,20 @@
-Éè¼ÆÌØÉ«:
-1. init_pcbÖĞ·ÖÅäÁËÒ»¿éÄÚºË×Ô¼ºµÄPCB²¢Ê¹current_runningÖ¸ÏòËü
-2. pcbÖĞkernel_context.regs[0]×÷ÎªĞÂ½¨½ø³ÌµÄ±êÖ¾
-3. ĞÂ½¨½ø³Ì»Ö¸´ÉÏÏÂÎÄÊ±Ö»¸³spÓëra¼Ä´æÆ÷µÄÖµ
-4. Ã¿´ÎÊÍ·ÅËø»áÁ¢¼´´Óblock_queue·Å³öÒ»¸ö½ø³Ì²¢Ê¹Æä»ñµÃËø
-5. ÇëÇó»¥³âËøÖ»Ğè¼ì²éÒ»´ÎËøµÄ×´Ì¬
+è®¾è®¡ç‰¹è‰²:
+1. init_pcbä¸­åˆ†é…äº†ä¸€å—å†…æ ¸è‡ªå·±çš„PCBå¹¶ä½¿current_runningæŒ‡å‘å®ƒ
+2. pcbä¸­kernel_context.regs[0]ä½œä¸ºæ–°å»ºè¿›ç¨‹çš„æ ‡å¿—
+3. æ–°å»ºè¿›ç¨‹æ¢å¤ä¸Šä¸‹æ–‡æ—¶åªèµ‹spä¸raå¯„å­˜å™¨çš„å€¼
+4. æ¯æ¬¡é‡Šæ”¾é”ä¼šç«‹å³ä»block_queueæ”¾å‡ºä¸€ä¸ªè¿›ç¨‹å¹¶ä½¿å…¶è·å¾—é”
+5. è¯·æ±‚äº’æ–¥é”åªéœ€æ£€æŸ¥ä¸€æ¬¡é”çš„çŠ¶æ€
 
-ĞŞ¸ÄµÄÎÄ¼şÄ¿Â¼½á¹¹£º
+ä¿®æ”¹çš„æ–‡ä»¶ç›®å½•ç»“æ„ï¼š
    |--arch/mips
-   |   |--boot/bootblock.S       : ¿½±´ÊµÑé1µÄbootblock
-   |   |--kernel/entry.S         : Íê³ÉSAVE_CONTEXTÓëRESTORE_CONTEXT
+   |   |--boot/bootblock.S       : æ‹·è´å®éªŒ1çš„bootblock
+   |   |--kernel/entry.S         : å®ŒæˆSAVE_CONTEXTä¸RESTORE_CONTEXT
    |--include/os
-   |   |--lock.h                 : Íê³Émutex_lock_t¶¨Òå
-   |   |--sched.h                : ÍêÉÆpcb_t¶¨Òå
-   |--init/main.c                : Íê³Éinit_pcb
+   |   |--lock.h                 : å®Œæˆmutex_lock_tå®šä¹‰
+   |   |--sched.h                : å®Œå–„pcb_tå®šä¹‰
+   |--init/main.c                : å®Œæˆinit_pcb
    |--kernel/
-   |   |--sched/sched.c          : Íê³Éscheduler¡¢do_blockÓëdo_unblock_one£¬ÆäÖĞĞŞ¸ÄÁËdo_unblock_oneµÄ·µ»ØÖµÎªint
-   |   |--locking/lock.c         : Íê³É»¥³âËøµÄ³õÊ¼»¯¡¢ÇëÇóºÍÊÍ·Å
-   |--tools/createimage.c        : ¿½±´ÊµÑé1µÄcreateimage
-   |--README.txt                 : ±¾ÎÄµµ
+   |   |--sched/sched.c          : å®Œæˆschedulerã€do_blockä¸do_unblock_oneï¼Œå…¶ä¸­ä¿®æ”¹äº†do_unblock_oneçš„è¿”å›å€¼ä¸ºint
+   |   |--locking/lock.c         : å®Œæˆäº’æ–¥é”çš„åˆå§‹åŒ–ã€è¯·æ±‚å’Œé‡Šæ”¾
+   |--tools/createimage.c        : æ‹·è´å®éªŒ1çš„createimage
+   |--README.txt                 : æœ¬æ–‡æ¡£
