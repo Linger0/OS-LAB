@@ -14,7 +14,7 @@
    |   |--sched.h                : 完善pcb_t定义
    |--init/main.c                : 完成init_pcb
    |--kernel/
-   |   |--sched/sched.c          : 完成scheduler、do_block与do_unblock_one
+   |   |--sched/sched.c          : 完成scheduler、do_block与do_unblock_one，其中修改了do_unblock_one的返回值为int
    |   |--locking/lock.c         : 完成互斥锁的初始化、请求和释放
    |--tools/createimage.c        : 拷贝实验1的createimage
    |--README.txt                 : 本文档
