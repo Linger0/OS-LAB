@@ -2,9 +2,6 @@
 #include "sched.h"
 #include "syscall.h"
 
-/* block queue */
-queue_t block_queue;
-
 void spin_lock_init(spin_lock_t *lock)
 {
 	lock->status = UNLOCKED;
@@ -25,18 +22,21 @@ void spin_lock_release(spin_lock_t *lock)
 void do_mutex_lock_init(mutex_lock_t *lock)
 {
 	lock->status = UNLOCKED;
+	queue_init(&lock->lock_queue);
 }
 
 void do_mutex_lock_acquire(mutex_lock_t *lock)
 {
 	if (lock->status == LOCKED)
-		do_block(&block_queue);
+		do_block(&lock->lock_queue);
 	lock->status = LOCKED;
 }
 
 void do_mutex_lock_release(mutex_lock_t *lock)
 {
 	lock->status = UNLOCKED;
-	if (do_unblock_one(&block_queue))
+	if (!queue_is_empty(&lock->lock_queue)) {
+		do_unblock_one(&lock->lock_queue);
 		lock->status = LOCKED;
+	}
 }

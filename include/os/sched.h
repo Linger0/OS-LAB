@@ -33,8 +33,8 @@
 #include "queue.h"
 
 #define NUM_MAX_TASK 16
-#define STACK_TOP 0xa0f00000
-#define KN_STACK_SIZE 4096 /* 4KB */
+#define STACK_BASE 0xa0f00000
+#define STACK_SIZE 2048 /* 2KB */
 
 /* used to save register infomation */
 typedef struct regs_context
@@ -85,14 +85,16 @@ typedef struct pcb
     task_type_t type;
     task_status_t status;
 
-    /* timeslice */
+    /* time *//* priority */
+    uint64_t runtime;
+    uint32_t priority;
 
     /* open files */
 
     /* page table */
 
     /* parent process */
-    struct pcb *parent;
+    // struct pcb *parent;
 
     /* previous, next pointer */
     void *prev;
@@ -124,11 +126,12 @@ extern pid_t process_id;
 extern pcb_t pcb[NUM_MAX_TASK];
 extern uint32_t initial_cp0_status;
 
+void new_proc_run(void);
 void do_scheduler(void);
 void do_sleep(uint32_t);
 
 void do_block(queue_t *);
-int do_unblock_one(queue_t *);
+void do_unblock_one(queue_t *);
 void do_unblock_all(queue_t *);
 
 #endif

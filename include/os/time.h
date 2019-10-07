@@ -34,7 +34,7 @@ extern uint32_t time_elapsed;
 
 uint32_t get_timer(void);
 
-uint32_t get_cp0_count(void);
+uint32_t get_count(void);
 
 uint32_t get_ticks(void);
 

@@ -140,7 +140,6 @@
 #define OFFSET_PC           152
 /* Size of stack frame, word/double word alignment */
 #define OFFSET_SIZE         156
-
 /*
  * Copyright (C) 1994, 1995, 1996, 1997, 2000, 2001 by Ralf Baechle
  *
@@ -195,5 +194,7 @@
 #define STATUS_IE           0x1
 #define CAUSE_IPL           0xff00
 #define CAUSE_EXCCODE       0x7c
+
+#define TIME_INTERVAL		150000
 
 #endif

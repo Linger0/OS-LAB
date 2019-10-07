@@ -6,7 +6,7 @@
 static char blank[] = {"                   "};
 static char plane1[] = {"    ___         _  "};
 static char plane2[] = {"| __\\_\\______/_| "};
-static char plane3[] = {"<[___\\_\\_______| hahahahaha~~~~~ "};
+static char plane3[] = {"<[___\\_\\_______| "};
 static char plane4[] = {"|  o'o             "};
 
 void printk_task1(void)
@@ -16,9 +16,11 @@ void printk_task1(void)
 
     for (i = 0;; i++)
     {
+	disable_int();
         vt100_move_cursor(1, print_location);
         printk("> [TASK] This task is to test scheduler. (%d)", i);
-        do_scheduler();
+        enable_int();
+        // do_scheduler();
     }
 }
 
@@ -29,9 +31,11 @@ void printk_task2(void)
 
     for (i = 0;; i++)
     {
+        disable_int();
         vt100_move_cursor(1, print_location);
         printk("> [TASK] This task is to test scheduler. (%d)", i);
-        do_scheduler();
+        enable_int();
+        // do_scheduler();
     }
 }
 
@@ -43,6 +47,7 @@ void drawing_task1(void)
     {
         for (i = 60; i > 0; i--)
         {
+            disable_int();
             /* move */
             vt100_move_cursor(i, j + 0);
             printk("%s", plane1);
@@ -55,9 +60,10 @@ void drawing_task1(void)
 
             vt100_move_cursor(i, j + 3);
             printk("%s", plane4);
+            enable_int();
         }
-        do_scheduler();
-
+        // do_scheduler();
+        disable_int();
         vt100_move_cursor(1, j + 0);
         printk("%s", blank);
 
@@ -69,5 +75,6 @@ void drawing_task1(void)
 
         vt100_move_cursor(1, j + 3);
         printk("%s", blank);
+        enable_int();
     }
 }

@@ -52,6 +52,7 @@ enum ExcCode
 };
 
 #define ExcCode 0x7c
+#define IPL 0xff00
 
 /* BEV = 0 */
 // Exception Enter Vector
@@ -65,6 +66,9 @@ enum ExcCode
 #define TIMER_INTERVAL 150000
 
 void interrupt_helper(uint32_t, uint32_t);
+void init_status(uint32_t);
+void init_enable_int(void);
+void set_compare(void);
 
 /* exception handler entery */
 extern void exception_handler_entry(void);

@@ -1,12 +1,26 @@
 #include "asm.h"
 
+#define TIME_INTERVAL 150000
+
 .equ    KERNEL, 0
 .equ    USER,   156
 
-.macro STI
+.macro DISABLE_INT
+    mfc0    k0, CP0_STATUS
+    li      k1, ~STATUS_IE
+    and     k0, k0, k1
+    mtc0    k0, CP0_STATUS
 .endm
 
-.macro CLI
+.macro ENABLE_INT
+    mfc0    k0, CP0_STATUS
+    ori     k0, STATUS_IE
+    mtc0    k0, CP0_STATUS
+.endm
+
+.macro QUIT_INT
+    RESTORE_CONTEXT(USER)
+    eret
 .endm
 
 LEAF(asm_start)
@@ -23,93 +37,144 @@ LEAF(asm_start)
 END(asm_start)
 
 .macro SAVE_CONTEXT offset
-    	// TODO save context
-	addiu	sp, sp, -8
-	sw	ra, 4(sp)		# ra ֵ入栈
-	lw	ra, current_running 	# ra 做为PCB基址
-	addiu	ra, ra, \offset
-	sw	$0, (ra)
-	sw	$1, 4(ra)
-	sw	$2, 8(ra)
-	sw	$3, 12(ra)
-	sw	$4, 16(ra)
-	sw	$5, 20(ra)
-	sw	$6, 24(ra)
-	sw	$7, 28(ra)
-	sw	$8, 32(ra)
-	sw	$9, 36(ra)
-	sw	$10, 40(ra)
-	sw	$11, 44(ra)
-	sw	$12, 48(ra)
-	sw	$13, 52(ra)
-	sw	$14, 56(ra)
-	sw	$15, 60(ra)
-	sw	$16, 64(ra)
-	sw	$17, 68(ra)
-	sw	$18, 72(ra)
-	sw	$19, 76(ra)
-	sw	$20, 80(ra)
-	sw	$21, 84(ra)
-	sw	$22, 88(ra)
-	sw	$23, 92(ra)
-	sw	$24, 96(ra)
-	sw	$25, 100(ra)
-	sw	$26, 104(ra)
-	sw	$27, 108(ra)
-	sw	$28, 112(ra)
-	sw	$30, 120(ra)
-	move 	t2, ra
-	lw	ra, 4(sp)	# ra 出栈
-	addiu	sp, sp, 8	# 回调 sp
-	sw	$29, 116(t2)
-	sw	$31, 124(t2)
+.set noat
+    // TODO save context
+    lw		k1, current_running 	# k1 做为PCB基址
+    addiu	k1, k1, \offset
+    sw		zero, OFFSET_REG0(k1)
+    sw		AT, OFFSET_REG1(k1)
+    sw	    v0, OFFSET_REG2(k1)
+    sw	    v1, OFFSET_REG3(k1)
+    sw	    a0, OFFSET_REG4(k1)
+    sw	    a1, OFFSET_REG5(k1)
+    sw	    a2, OFFSET_REG6(k1)
+    sw	    a3, OFFSET_REG7(k1)
+    sw	    t0, OFFSET_REG8(k1)
+    sw	    t1, OFFSET_REG9(k1)
+    sw	    t2, OFFSET_REG10(k1)
+    sw	    t3, OFFSET_REG11(k1)
+    sw	    t4, OFFSET_REG12(k1)
+    sw	    t5, OFFSET_REG13(k1)
+    sw	    t6, OFFSET_REG14(k1)
+    sw	    t7, OFFSET_REG15(k1)
+    sw	    s0, OFFSET_REG16(k1)
+    sw	    s1, OFFSET_REG17(k1)
+    sw	    s2, OFFSET_REG18(k1)
+    sw	    s3, OFFSET_REG19(k1)
+    sw	    s4, OFFSET_REG20(k1)
+    sw	    s5, OFFSET_REG21(k1)
+    sw	    s6, OFFSET_REG22(k1)
+    sw	    s7, OFFSET_REG23(k1)
+    sw	    t8, OFFSET_REG24(k1)
+    sw	    t9, OFFSET_REG25(k1)
+    sw	    gp, OFFSET_REG28(k1)
+    sw	    sp, OFFSET_REG29(k1)
+    sw  	fp, OFFSET_REG30(k1)
+    sw	    ra, OFFSET_REG31(k1)
+    
+    mfc0    k0, CP0_STATUS
+    sw      k0, OFFSET_STATUS(k1)
+    mfhi    k0
+    sw      k0, OFFSET_HI(k1)
+    mflo    k0
+    sw		k0, OFFSET_LO(k1)
+    mfc0    k0, CP0_BADVADDR
+    sw      k0, OFFSET_BADVADDR(k1)
+    mfc0    k0, CP0_CAUSE
+    sw      k0, OFFSET_CAUSE(k1)
+    mfc0    k0, CP0_EPC
+    sw      k0, OFFSET_EPC(k1)
 .endm
 
 .macro RESTORE_CONTEXT offset
-    	// TODO restore context
-	lw	ra, current_running # ra 作为PCB基址
-	lw	t2, (ra)
-	addi	ra, ra, \offset
-	bnez	t2, new		# regs[0]==1 跳转（新进程）
-
-	lw	$1, 4(ra)
-	lw	$2, 8(ra)
-	lw	$3, 12(ra)
-	lw	$4, 16(ra)
-	lw	$5, 20(ra)
-	lw	$6, 24(ra)
-	lw	$7, 28(ra)
-	lw	$8, 32(ra)
-	lw	$9, 36(ra)
-	lw	$10, 40(ra)
-	lw	$11, 44(ra)
-	lw	$12, 48(ra)
-	lw	$13, 52(ra)
-	lw	$14, 56(ra)
-	lw	$15, 60(ra)
-	lw	$16, 64(ra)
-	lw	$17, 68(ra)
-	lw	$18, 72(ra)
-	lw	$19, 76(ra)
-	lw	$20, 80(ra)
-	lw	$21, 84(ra)
-	lw	$22, 88(ra)
-	lw	$23, 92(ra)
-	lw	$24, 96(ra)
-	lw	$25, 100(ra)
-	lw	$26, 104(ra)
-	lw	$27, 108(ra)
-	lw	$28, 112(ra)
-	lw	$30, 120(ra)
-new:	lw	$29, 116(ra)	# 新进程只修改 sp, ra
-	lw	$31, 124(ra)
+.set noat
+    // TODO restore context
+    lw	    k1, current_running 	# k1 作为PCB基址
+    addi	k1, k1, \offset
+    lw      t1, (k1)
+    bnez    t1, 1f                  # regs[0]==1 jmp
+    lw	    AT, OFFSET_REG1(k1)
+    lw	    v0, OFFSET_REG2(k1)
+    lw	    v1, OFFSET_REG3(k1)
+    lw	    a0, OFFSET_REG4(k1)
+    lw	    a1, OFFSET_REG5(k1)
+    lw	    a2, OFFSET_REG6(k1)
+    lw	    a3, OFFSET_REG7(k1)
+    lw	    t0, OFFSET_REG8(k1)
+    lw	    t1, OFFSET_REG9(k1)
+    lw	    t2, OFFSET_REG10(k1)
+    lw	    t3, OFFSET_REG11(k1)
+    lw	    t4, OFFSET_REG12(k1)
+    lw	    t5, OFFSET_REG13(k1)
+    lw	    t6, OFFSET_REG14(k1)
+    lw	    t7, OFFSET_REG15(k1)
+    lw	    s0, OFFSET_REG16(k1)
+    lw	    s1, OFFSET_REG17(k1)
+    lw	    s2, OFFSET_REG18(k1)
+    lw	    s3, OFFSET_REG19(k1)
+    lw	    s4, OFFSET_REG20(k1)
+    lw	    s5, OFFSET_REG21(k1)
+    lw	    s6, OFFSET_REG22(k1)
+    lw	    s7, OFFSET_REG23(k1)
+    lw	    t8, OFFSET_REG24(k1)
+    lw	    t9, OFFSET_REG25(k1)
+    lw	    gp, OFFSET_REG28(k1)
+    lw	    fp, OFFSET_REG30(k1)
+    lw      k0, OFFSET_STATUS(k1)
+    mtc0    k0, CP0_STATUS
+1:
+    lw		k0, OFFSET_HI(k1)
+    mthi	k0
+    lw		k0, OFFSET_LO(k1)
+    mtlo	k0
+    lw		k0, OFFSET_BADVADDR(k1)
+    mtc0	k0, CP0_BADVADDR
+    lw		k0, OFFSET_CAUSE(k1)
+    mtc0	k0, CP0_CAUSE
+    lw	    ra, OFFSET_REG31(k1)
+    lw	    sp, OFFSET_REG29(k1)
+    lw		k0, OFFSET_EPC(k1)
+    mtc0	k0, CP0_EPC
 .endm
 
+LEAF(init_status)
+    mfc0	k0, CP0_STATUS
+    or	    k0, k0, a0
+    li      k1, ~STATUS_IE
+    and     k0, k0, k1    
+    mtc0	k0, CP0_STATUS
+    jr      ra
+END(init_status)
+
+LEAF(init_enable_int)
+    ENABLE_INT
+    jr      ra
+END(init_enable_int)
+
+LEAF(new_proc_run)
+    QUIT_INT
+END(new_proc_run)
+
+LEAF(get_count)
+    mfc0    v0, CP0_COUNT
+    jr      ra
+END(get_count)
+
+LEAF(set_compare)
+    mtc0    zero, CP0_COUNT
+    li      k0, TIME_INTERVAL
+    mtc0    k0, CP0_COMPARE
+    jr      ra
+END(set_compare)
+
 NESTED(do_scheduler, 0, ra)
-	SAVE_CONTEXT(KERNEL)
-	jal     scheduler
-	RESTORE_CONTEXT(KERNEL)
-	jr      ra	
+    SAVE_CONTEXT(KERNEL)
+    jal     scheduler
+    RESTORE_CONTEXT(KERNEL)
+    mtc0    zero, CP0_COUNT
+    li      k0, TIME_INTERVAL
+    mtc0    k0, CP0_COMPARE
+    jr      ra	
 END(do_scheduler)
 
 .global exception_handler_begin
@@ -118,22 +183,44 @@ END(do_scheduler)
 NESTED(exception_handler_entry, 0, sp)   
 exception_handler_begin:
     // TODO close interrupt
-    // jmp exception_handler[i] which decided by CP0_CAUSE
     // Leve2 exception Handler.
+    // jmp exception_handler[i] which decided by CP0_CAUSE
+    SAVE_CONTEXT(USER)
+    mfc0    k1, CP0_CAUSE
+    and     k1, k1, CAUSE_EXCCODE
+    srl     k1, k1, 2
+    la      k0, exception_handler
+    add     k0, k0, k1
+    lw      ra, (k0)
+    jr      ra
 exception_handler_end:
 END(exception_handler_entry)
 
 NESTED(handle_int, 0, sp)
-    // interrupt handler
+    // interrupt Handler
     // Leve3 exception Handler.
+    mfc0    a0, CP0_STATUS
+    mfc0    a1, CP0_CAUSE
+    jal     interrupt_helper
+    QUIT_INT
 END(handle_int)
 
 NESTED(handle_syscall, 0, sp)
     // system call handler
+    QUIT_INT
 END(handle_syscall)
 
 NESTED(handle_other, 0, sp)
     // other exception handler
+    QUIT_INT
 END(handle_other)
 
+LEAF(disable_int)
+    DISABLE_INT
+    jr  ra
+END(disable_int)
 
+LEAF(enable_int)
+    ENABLE_INT
+    jr  ra
+END(enable_int)

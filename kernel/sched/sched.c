@@ -15,6 +15,7 @@ pid_t process_id = 1;
 
 /* ready queue */
 queue_t ready_queue;
+queue_t block_queue;
 
 static void check_sleeping()
 {
@@ -23,12 +24,27 @@ static void check_sleeping()
 void scheduler(void)
 {
 	// Modify the current_running pointer.
-	if (current_running->status == TASK_RUNNING) {
-		current_running->status = TASK_READY;
-		queue_push(&ready_queue, current_running);
+	pcb_t *item;
+	uint32_t _count = get_count();
+	time_elapsed += _count;
+	if (!(current_running->status == TASK_EXITED)) {
+		current_running->runtime += _count;
+		if (current_running->status == TASK_RUNNING) {
+			current_running->status = TASK_READY;
+			queue_push(&ready_queue, current_running);
+		}
 	}
-	current_running = queue_dequeue(&ready_queue);
-	process_id = current_running->pid;
+	current_running = ready_queue.head;
+	for (item = ready_queue.head; item; item = item->next) {
+		if (item->priority < current_running->priority) 
+			continue;
+		if (item->priority > current_running->priority)
+			current_running = item;
+		/* item->priority == current_running->priority */
+		else if (item->runtime < current_running->runtime)
+			current_running = item;
+	}
+	queue_remove(&ready_queue, current_running);
 	current_running->status = TASK_RUNNING;
 }
 
@@ -45,17 +61,13 @@ void do_block(queue_t *queue)
 	do_scheduler();
 }
 
-int do_unblock_one(queue_t *queue)
+void do_unblock_one(queue_t *queue)
 {
 	// unblock the head task from the queue
-	if (queue_is_empty(queue)) return 0;
-	else {
-		pcb_t *unblock_process;
-		unblock_process = queue_dequeue(queue);
-		unblock_process->status = TASK_READY;
-		queue_push(&ready_queue, unblock_process);
-	}
-	return 1;
+	pcb_t *unblock_process;
+	unblock_process = queue_dequeue(queue);
+	unblock_process->status = TASK_READY;
+	queue_push(&ready_queue, unblock_process);
 }
 
 void do_unblock_all(queue_t *queue)

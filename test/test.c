@@ -2,9 +2,9 @@
 
 /* [TASK1] [TASK3] task group to test do_scheduler() */
 // do_scheduler() annotations are required for non-robbed scheduling
-struct task_info task2_1 = {(uint32_t)&printk_task1, KERNEL_THREAD};
-struct task_info task2_2 = {(uint32_t)&printk_task2, KERNEL_THREAD};
-struct task_info task2_3 = {(uint32_t)&drawing_task1, KERNEL_THREAD};
+struct task_info task2_1 = {(uint32_t)&printk_task1, USER_PROCESS};
+struct task_info task2_2 = {(uint32_t)&printk_task2, USER_PROCESS};
+struct task_info task2_3 = {(uint32_t)&drawing_task1, USER_PROCESS};
 struct task_info *sched1_tasks[16] = {&task2_1, &task2_2, &task2_3};
 int num_sched1_tasks = 3;
 
