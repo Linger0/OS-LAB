@@ -30,6 +30,8 @@
 
 #include "queue.h"
 
+#define NUM_LOCK 2
+
 typedef enum {
     UNLOCKED,
     LOCKED,
@@ -42,9 +44,12 @@ typedef struct spin_lock
 
 typedef struct mutex_lock
 {
+	int left;
     lock_status_t status;
     queue_t lock_queue;
 } mutex_lock_t;
+
+extern int lock_max_thread[NUM_LOCK];
 
 /* init lock */
 void spin_lock_init(spin_lock_t *lock);

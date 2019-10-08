@@ -195,6 +195,4 @@
 #define CAUSE_IPL           0xff00
 #define CAUSE_EXCCODE       0x7c
 
-#define TIME_INTERVAL		150000
-
 #endif

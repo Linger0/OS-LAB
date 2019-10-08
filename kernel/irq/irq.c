@@ -5,26 +5,22 @@
 
 static void irq_timer()
 {
-    // TODO clock interrupt handler.
-    // scheduler, time counter in here to do, emmmmmm maybe.
-    do_scheduler();
+    screen_reflush();
+    do_scheduler(); // 由 scheduler 重置 cp0_count & cp0_compare
     return;
 }
 
 void other_exception_handler()
 {
-    // TODO other exception handler
     return;
 }
 
 void interrupt_helper(uint32_t status, uint32_t cause)
 {
-    // TODO interrupt handler.
     // Leve3 exception Handler.
-    // read CP0 register to analyze the type of interrupt.
     if ((status & cause & IPL) == 0x8000)
         irq_timer();
-    else    
+    else 
         other_exception_handler();
     return;
 }

@@ -34,14 +34,14 @@
 
 #define NUM_MAX_TASK 16
 #define STACK_BASE 0xa0f00000
-#define STACK_SIZE 2048 /* 2KB */
+#define STACK_SIZE 4096 /* 4KB */
 
 /* used to save register infomation */
 typedef struct regs_context
 {
     /* Saved main processor registers.*/
     /* 32 * 4B = 128B */
-    uint32_t regs[32];	// kernel_context.regs[0]==1 表示新进程
+    uint32_t regs[32];
 
     /* Saved special registers. */
     /* 7 * 4B = 28B */
@@ -85,8 +85,10 @@ typedef struct pcb
     task_type_t type;
     task_status_t status;
 
-    /* time *//* priority */
-    uint64_t runtime;
+    /* wakeup time */
+    uint32_t wakeup_time;
+
+    /* priority */
     uint32_t priority;
 
     /* open files */
@@ -125,6 +127,7 @@ extern pid_t process_id;
 
 extern pcb_t pcb[NUM_MAX_TASK];
 extern uint32_t initial_cp0_status;
+extern uint32_t initial_priority;
 
 void new_proc_run(void);
 void do_scheduler(void);

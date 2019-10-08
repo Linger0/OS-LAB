@@ -1,27 +1,7 @@
 #include "asm.h"
 
-#define TIME_INTERVAL 150000
-
 .equ    KERNEL, 0
 .equ    USER,   156
-
-.macro DISABLE_INT
-    mfc0    k0, CP0_STATUS
-    li      k1, ~STATUS_IE
-    and     k0, k0, k1
-    mtc0    k0, CP0_STATUS
-.endm
-
-.macro ENABLE_INT
-    mfc0    k0, CP0_STATUS
-    ori     k0, STATUS_IE
-    mtc0    k0, CP0_STATUS
-.endm
-
-.macro QUIT_INT
-    RESTORE_CONTEXT(USER)
-    eret
-.endm
 
 LEAF(asm_start)
     mtc0    zero, CP0_STATUS
@@ -41,7 +21,6 @@ END(asm_start)
     // TODO save context
     lw		k1, current_running 	# k1 做为PCB基址
     addiu	k1, k1, \offset
-    sw		zero, OFFSET_REG0(k1)
     sw		AT, OFFSET_REG1(k1)
     sw	    v0, OFFSET_REG2(k1)
     sw	    v1, OFFSET_REG3(k1)
@@ -91,8 +70,6 @@ END(asm_start)
     // TODO restore context
     lw	    k1, current_running 	# k1 作为PCB基址
     addi	k1, k1, \offset
-    lw      t1, (k1)
-    bnez    t1, 1f                  # regs[0]==1 jmp
     lw	    AT, OFFSET_REG1(k1)
     lw	    v0, OFFSET_REG2(k1)
     lw	    v1, OFFSET_REG3(k1)
@@ -119,76 +96,74 @@ END(asm_start)
     lw	    t8, OFFSET_REG24(k1)
     lw	    t9, OFFSET_REG25(k1)
     lw	    gp, OFFSET_REG28(k1)
+    lw	    sp, OFFSET_REG29(k1)
     lw	    fp, OFFSET_REG30(k1)
+    lw	    ra, OFFSET_REG31(k1)
+
     lw      k0, OFFSET_STATUS(k1)
     mtc0    k0, CP0_STATUS
-1:
-    lw		k0, OFFSET_HI(k1)
-    mthi	k0
-    lw		k0, OFFSET_LO(k1)
-    mtlo	k0
-    lw		k0, OFFSET_BADVADDR(k1)
-    mtc0	k0, CP0_BADVADDR
-    lw		k0, OFFSET_CAUSE(k1)
-    mtc0	k0, CP0_CAUSE
-    lw	    ra, OFFSET_REG31(k1)
-    lw	    sp, OFFSET_REG29(k1)
-    lw		k0, OFFSET_EPC(k1)
-    mtc0	k0, CP0_EPC
+    lw      k0, OFFSET_HI(k1)
+    mthi    k0
+    lw      k0, OFFSET_LO(k1)
+    mtlo    k0
+    lw      k0, OFFSET_BADVADDR(k1)
+    mtc0    k0, CP0_BADVADDR
+    lw      k0, OFFSET_CAUSE(k1)
+    mtc0    k0, CP0_CAUSE
+    lw      k0, OFFSET_EPC(k1)
+    mtc0    k0, CP0_EPC
 .endm
 
-LEAF(init_status)
-    mfc0	k0, CP0_STATUS
-    or	    k0, k0, a0
-    li      k1, ~STATUS_IE
-    and     k0, k0, k1    
-    mtc0	k0, CP0_STATUS
+LEAF(init_cp0_status)
+    and     a0, ~0x3
+    mtc0	a0, CP0_STATUS
     jr      ra
-END(init_status)
+END(init_cp0_status)
 
 LEAF(init_enable_int)
-    ENABLE_INT
+    mfc0    k0, CP0_STATUS
+    ori     k0, STATUS_IE
+    mtc0    k0, CP0_STATUS
     jr      ra
 END(init_enable_int)
 
 LEAF(new_proc_run)
-    QUIT_INT
+    RESTORE_CONTEXT(USER)
+    eret
 END(new_proc_run)
 
-LEAF(get_count)
+LEAF(get_cp0_count)
     mfc0    v0, CP0_COUNT
     jr      ra
-END(get_count)
-
-LEAF(set_compare)
-    mtc0    zero, CP0_COUNT
-    li      k0, TIME_INTERVAL
-    mtc0    k0, CP0_COMPARE
-    jr      ra
-END(set_compare)
+END(get_cp0_count)
 
 NESTED(do_scheduler, 0, ra)
     SAVE_CONTEXT(KERNEL)
     jal     scheduler
     RESTORE_CONTEXT(KERNEL)
-    mtc0    zero, CP0_COUNT
-    li      k0, TIME_INTERVAL
-    mtc0    k0, CP0_COMPARE
     jr      ra	
 END(do_scheduler)
+
+LEAF(reset_cp0_count)
+    mtc0    zero, CP0_COUNT
+    jr      ra
+END(reset_cp0_count)
+
+LEAF(set_cp0_compare)
+    mtc0    a0, CP0_COMPARE
+    jr      ra
+END(set_cp0_compare)
 
 .global exception_handler_begin
 .global exception_handler_end
 
 NESTED(exception_handler_entry, 0, sp)   
 exception_handler_begin:
-    // TODO close interrupt
     // Leve2 exception Handler.
     // jmp exception_handler[i] which decided by CP0_CAUSE
     SAVE_CONTEXT(USER)
     mfc0    k1, CP0_CAUSE
     and     k1, k1, CAUSE_EXCCODE
-    srl     k1, k1, 2
     la      k0, exception_handler
     add     k0, k0, k1
     lw      ra, (k0)
@@ -202,25 +177,22 @@ NESTED(handle_int, 0, sp)
     mfc0    a0, CP0_STATUS
     mfc0    a1, CP0_CAUSE
     jal     interrupt_helper
-    QUIT_INT
+    RESTORE_CONTEXT(USER)
+    eret
 END(handle_int)
 
 NESTED(handle_syscall, 0, sp)
     // system call handler
-    QUIT_INT
+    jal	    system_call_helper
+    RESTORE_CONTEXT(USER)
+    mfc0    k0, CP0_EPC
+    add     k0, 4
+    mtc0    k0, CP0_EPC
+    eret
 END(handle_syscall)
 
 NESTED(handle_other, 0, sp)
     // other exception handler
-    QUIT_INT
+	RESTORE_CONTEXT(USER)
+    eret
 END(handle_other)
-
-LEAF(disable_int)
-    DISABLE_INT
-    jr  ra
-END(disable_int)
-
-LEAF(enable_int)
-    ENABLE_INT
-    jr  ra
-END(enable_int)

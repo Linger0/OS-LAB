@@ -3,123 +3,131 @@
 #include "stdio.h"
 #include "syscall.h"
 
+#define CYCLE 50
 int is_init = FALSE;
 static char blank[] = {"                                             "};
 
-/* if you want to use spin lock, you need define SPIN_LOCK */
-//  #define SPIN_LOCK
-spin_lock_t spin_lock;
-
-/* if you want to use mutex lock, you need define MUTEX_LOCK */
-#define MUTEX_LOCK
-mutex_lock_t mutex_lock;
+mutex_lock_t mutex_lock[NUM_LOCK];
+int lock_max_thread[] = {2, 1};
 
 void lock_task1(void)
 {
-        int print_location = 1;
+        int print_location = 5;
         while (1)
         {
                 int i;
                 if (!is_init)
                 {
-
-#ifdef SPIN_LOCK
-                        spin_lock_init(&spin_lock);
-#endif
-
-#ifdef MUTEX_LOCK
-                        mutex_lock_init(&mutex_lock);
-#endif
-                        is_init = TRUE;
+					mutex_lock_init(mutex_lock);
+                    is_init = TRUE;
                 }
 
                 sys_move_cursor(1, print_location);
                 printf("%s", blank);
 
                 sys_move_cursor(1, print_location);
-                printf("> [TASK] Applying for a lock.\n");
+                printf("> [TASK] Applying for lock[0].\n");
 
-#ifdef SPIN_LOCK
-                spin_lock_acquire(&spin_lock);
-#endif
+                mutex_lock_acquire(&mutex_lock[0]);
 
-#ifdef MUTEX_LOCK
-                mutex_lock_acquire(&mutex_lock);
-#endif
+                sys_move_cursor(1, print_location);
+                printf("> [TASK] Applying for lock[1].\n");
 
-                for (i = 0; i < 20; i++)
+                mutex_lock_acquire(&mutex_lock[1]);
+
+                for (i = 0; i < CYCLE; i++)
                 {
                         sys_move_cursor(1, print_location);
-                        printf("> [TASK] Has acquired lock and running.(%d)\n", i);
+                        printf("> [TASK] Has acquired 2 lock and running.(%d)\n", i);
                 }
 
                 sys_move_cursor(1, print_location);
                 printf("%s", blank);
 
                 sys_move_cursor(1, print_location);
-                printf("> [TASK] Has acquired lock and exited.\n");
+                printf("> [TASK] Has acquired 2 lock and exited.\n");
 
-#ifdef SPIN_LOCK
-                spin_lock_release(&spin_lock);
-#endif
-
-#ifdef MUTEX_LOCK
-                mutex_lock_release(&mutex_lock);
-#endif
+                mutex_lock_release(&mutex_lock[0]);
+				
+                mutex_lock_release(&mutex_lock[1]);
         }
 }
 
 void lock_task2(void)
 {
-        int print_location = 2;
+        int print_location = 6;
         while (1)
         {
                 int i;
                 if (!is_init)
                 {
-
-#ifdef SPIN_LOCK
-                        spin_lock_init(&spin_lock);
-#endif
-
-#ifdef MUTEX_LOCK
-                        mutex_lock_init(&mutex_lock);
-#endif
-                        is_init = TRUE;
+					mutex_lock_init(mutex_lock);
+                    is_init = TRUE;
                 }
 
                 sys_move_cursor(1, print_location);
                 printf("%s", blank);
 
                 sys_move_cursor(1, print_location);
-                printf("> [TASK] Applying for a lock.\n");
+                printf("> [TASK] Applying for lock[0].\n");
 
-#ifdef SPIN_LOCK
-                spin_lock_acquire(&spin_lock);
-#endif
+                mutex_lock_acquire(&mutex_lock[0]);
+				
+                sys_move_cursor(1, print_location);
+                printf("> [TASK] Applying for lock[1].\n");
 
-#ifdef MUTEX_LOCK
-                mutex_lock_acquire(&mutex_lock);
-#endif
+                mutex_lock_acquire(&mutex_lock[1]);
 
-                for (i = 0; i < 20; i++)
+                for (i = 0; i < CYCLE; i++)
                 {
                         sys_move_cursor(1, print_location);
-                        printf("> [TASK] Has acquired lock and running.(%d)\n", i);
+                        printf("> [TASK] Has acquired 2 lock and running.(%d)\n", i);
                 }
 
                 sys_move_cursor(1, print_location);
                 printf("%s", blank);
 
                 sys_move_cursor(1, print_location);
-                printf("> [TASK] Has acquired lock and exited.\n");
+                printf("> [TASK] Has acquired 2 lock and exited.\n");
 
-#ifdef SPIN_LOCK
-                spin_lock_release(&spin_lock);
-#endif
+                mutex_lock_release(&mutex_lock[0]);
+				
+                mutex_lock_release(&mutex_lock[1]);
+        }
+}
 
-#ifdef MUTEX_LOCK
-                mutex_lock_release(&mutex_lock);
-#endif
+void lock_task3(void)
+{
+        int print_location = 7;
+        while (1)
+        {
+                int i;
+                if (!is_init)
+                {
+					mutex_lock_init(mutex_lock);
+                    is_init = TRUE;
+                }
+
+                sys_move_cursor(1, print_location);
+                printf("%s", blank);
+
+                sys_move_cursor(1, print_location);
+                printf("> [TASK] Applying for lock[0].\n");
+
+                mutex_lock_acquire(&mutex_lock[0]);
+
+                for (i = 0; i < CYCLE; i++)
+                {
+                        sys_move_cursor(1, print_location);
+                        printf("> [TASK] Has acquired lock[0] and running.(%d)\n", i);
+                }
+
+                sys_move_cursor(1, print_location);
+                printf("%s", blank);
+
+                sys_move_cursor(1, print_location);
+                printf("> [TASK] Has acquired lock[0] and exited.\n");
+
+                mutex_lock_release(&mutex_lock[0]);
         }
 }
