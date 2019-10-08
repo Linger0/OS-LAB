@@ -34,7 +34,7 @@
 
 pcb_t kn_pcb;
 uint32_t initial_cp0_status = 0x10008003;
-uint32_t initial_priority = 0b1111;
+uint32_t initial_priority = 10;
 void (*exception_handler[NUM_EXCCODE])();
 int (*syscall[NUM_SYSCALLS])();
 

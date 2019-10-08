@@ -23,8 +23,7 @@ void do_mutex_lock_init(mutex_lock_t *lock)
 {
 	int i;
 	for (i = 0; i < NUM_LOCK; i++) {
-		lock[i].status = UNLOCKED;
-		lock[i].left = lock_max_thread[i];
+		lock[i].status = lock_max_thread[i];
 		queue_init(&lock[i].lock_queue);
 	}
 }
@@ -33,16 +32,14 @@ void do_mutex_lock_acquire(mutex_lock_t *lock)
 {
 	if (lock->status == LOCKED)
 		do_block(&lock->lock_queue);
-	if (--lock->left == 0)
-		lock->status = LOCKED;
+	else
+		lock->status--;
 }
 
 void do_mutex_lock_release(mutex_lock_t *lock)
 {
 	if (!queue_is_empty(&lock->lock_queue))
 		do_unblock_one(&lock->lock_queue);
-	else {
-		++lock->left;
-		lock->status = UNLOCKED;
-	}
+	else
+		lock->status++;
 }

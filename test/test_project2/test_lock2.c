@@ -8,7 +8,7 @@ int is_init = FALSE;
 static char blank[] = {"                                             "};
 
 mutex_lock_t mutex_lock[NUM_LOCK];
-int lock_max_thread[] = {2, 1};
+lock_status_t lock_max_thread[NUM_LOCK] = {2,1};
 
 void lock_task1(void)
 {
@@ -119,7 +119,7 @@ void lock_task3(void)
                 for (i = 0; i < CYCLE; i++)
                 {
                         sys_move_cursor(1, print_location);
-                        printf("> [TASK] Has acquired lock[0] and running.(%d)\n", i);
+                        printf("> [TASK] Has acquired lock and running.(%d)\n", i);
                 }
 
                 sys_move_cursor(1, print_location);
