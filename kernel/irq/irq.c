@@ -5,7 +5,6 @@
 
 static void irq_timer()
 {
-    screen_reflush();
     do_scheduler(); // 由 scheduler 重置 cp0_count & cp0_compare
     return;
 }

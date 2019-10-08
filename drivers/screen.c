@@ -84,6 +84,7 @@ void screen_write(char *buff)
     {
         screen_write_ch(buff[i]);
     }
+    screen_reflush();
 }
 
 /* 
