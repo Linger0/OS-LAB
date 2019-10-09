@@ -6,7 +6,7 @@ static int MHZ = 300;
 
 uint32_t get_ticks()
 {
-    time_elapsed += (get_cp0_count() / 20);
+    time_elapsed += (get_cp0_count() / 15);
     return time_elapsed;
 }
 

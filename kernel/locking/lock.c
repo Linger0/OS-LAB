@@ -10,7 +10,7 @@ void spin_lock_init(spin_lock_t *lock)
 void spin_lock_acquire(spin_lock_t *lock)
 {
 	while (LOCKED == lock->status)
-		do_scheduler();
+		;
 	lock->status = LOCKED;
 }
 

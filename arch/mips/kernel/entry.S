@@ -18,10 +18,10 @@ END(asm_start)
 
 .macro SAVE_CONTEXT offset
 .set noat
-    // TODO save context
-    lw		k1, current_running 	# k1 做为PCB基址
-    addiu	k1, k1, \offset
-    sw		AT, OFFSET_REG1(k1)
+    // save context
+    lw      k1, current_running 	# k1 做为PCB基址
+    addiu   k1, k1, \offset
+    sw      AT, OFFSET_REG1(k1)
     sw	    v0, OFFSET_REG2(k1)
     sw	    v1, OFFSET_REG3(k1)
     sw	    a0, OFFSET_REG4(k1)
@@ -48,7 +48,7 @@ END(asm_start)
     sw	    t9, OFFSET_REG25(k1)
     sw	    gp, OFFSET_REG28(k1)
     sw	    sp, OFFSET_REG29(k1)
-    sw  	fp, OFFSET_REG30(k1)
+    sw      fp, OFFSET_REG30(k1)
     sw	    ra, OFFSET_REG31(k1)
     
     mfc0    k0, CP0_STATUS
@@ -56,7 +56,7 @@ END(asm_start)
     mfhi    k0
     sw      k0, OFFSET_HI(k1)
     mflo    k0
-    sw		k0, OFFSET_LO(k1)
+    sw      k0, OFFSET_LO(k1)
     mfc0    k0, CP0_BADVADDR
     sw      k0, OFFSET_BADVADDR(k1)
     mfc0    k0, CP0_CAUSE
@@ -67,9 +67,9 @@ END(asm_start)
 
 .macro RESTORE_CONTEXT offset
 .set noat
-    // TODO restore context
+    // restore context
     lw	    k1, current_running 	# k1 作为PCB基址
-    addi	k1, k1, \offset
+    addi    k1, k1, \offset
     lw	    AT, OFFSET_REG1(k1)
     lw	    v0, OFFSET_REG2(k1)
     lw	    v1, OFFSET_REG3(k1)
@@ -115,12 +115,14 @@ END(asm_start)
 .endm
 
 LEAF(init_cp0_status)
+    // Set CP0_STATUS in main().
     and     a0, ~0x3
-    mtc0	a0, CP0_STATUS
+    mtc0    a0, CP0_STATUS
     jr      ra
 END(init_cp0_status)
 
 LEAF(init_enable_int)
+    // Enable interrupt in main().
     mfc0    k0, CP0_STATUS
     ori     k0, STATUS_IE
     mtc0    k0, CP0_STATUS
@@ -128,11 +130,13 @@ LEAF(init_enable_int)
 END(init_enable_int)
 
 LEAF(new_proc_run)
+    // New process start here.
     RESTORE_CONTEXT(USER)
     eret
 END(new_proc_run)
 
 LEAF(get_cp0_count)
+    // return CP0_COUNT
     mfc0    v0, CP0_COUNT
     jr      ra
 END(get_cp0_count)
@@ -145,11 +149,13 @@ NESTED(do_scheduler, 0, ra)
 END(do_scheduler)
 
 LEAF(reset_cp0_count)
+    // reset CP0_COUNT
     mtc0    zero, CP0_COUNT
     jr      ra
 END(reset_cp0_count)
 
 LEAF(set_cp0_compare)
+    // set CP0_COMPARE
     mtc0    a0, CP0_COMPARE
     jr      ra
 END(set_cp0_compare)
@@ -176,14 +182,18 @@ NESTED(handle_int, 0, sp)
     // Leve3 exception Handler.
     mfc0    a0, CP0_STATUS
     mfc0    a1, CP0_CAUSE
+    addiu   sp, sp, -8
     jal     interrupt_helper
+    addiu   sp, sp, 8
     RESTORE_CONTEXT(USER)
     eret
 END(handle_int)
 
 NESTED(handle_syscall, 0, sp)
     // system call handler
+    addiu   sp, sp, -16
     jal	    system_call_helper
+    addiu   sp, sp, 16
     RESTORE_CONTEXT(USER)
     mfc0    k0, CP0_EPC
     add     k0, 4
@@ -193,6 +203,6 @@ END(handle_syscall)
 
 NESTED(handle_other, 0, sp)
     // other exception handler
-	RESTORE_CONTEXT(USER)
+    RESTORE_CONTEXT(USER)
     eret
 END(handle_other)

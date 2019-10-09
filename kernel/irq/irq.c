@@ -17,7 +17,7 @@ void other_exception_handler()
 void interrupt_helper(uint32_t status, uint32_t cause)
 {
     // Leve3 exception Handler.
-    if ((status & cause & IPL) == 0x8000)
+    if ((status & cause & IP) == 0x8000)
         irq_timer();
     else 
         other_exception_handler();

@@ -12,7 +12,7 @@ pcb_t pcb[NUM_MAX_TASK];
 pcb_t *current_running;
 
 /* global process id */
-pid_t process_id = 1;
+pid_t process_id = 0;
 
 /* ready/block queue */
 queue_t ready_queue;
@@ -26,7 +26,7 @@ static void check_sleeping()
 		if (cur_time > _item->wakeup_time) {
 			queue_remove(&block_queue, _item);
 			_item->status = TASK_READY;
-			_item->priority = initial_priority + 5; // 被阻塞任务唤醒后优先级提升
+			_item->priority = _item->priority + 5; // 被阻塞任务唤醒后优先级提升
 			queue_push(&ready_queue, _item);
 		}
 }
@@ -45,7 +45,7 @@ void scheduler(void)
 
 	// 重置priority
 	if (current_running->priority)
-		current_running->priority = initial_priority;
+		current_running->priority = initial_priority[current_running->pid];
 
 	get_ticks(); // 更新 time_elapsed
 	reset_cp0_count();

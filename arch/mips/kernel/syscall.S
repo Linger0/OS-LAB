@@ -2,5 +2,5 @@
 
 LEAF(invoke_syscall)
     syscall
-	jr		ra
+    jr      ra
 END(invoke_syscall)

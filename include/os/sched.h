@@ -127,7 +127,7 @@ extern pid_t process_id;
 
 extern pcb_t pcb[NUM_MAX_TASK];
 extern uint32_t initial_cp0_status;
-extern uint32_t initial_priority;
+extern uint32_t initial_priority[];
 
 void new_proc_run(void);
 void do_scheduler(void);

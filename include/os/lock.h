@@ -44,10 +44,11 @@ typedef struct spin_lock
 
 typedef struct mutex_lock
 {
-    lock_status_t status;
+    lock_status_t status; // 作为允许线程数
     queue_t lock_queue;
 } mutex_lock_t;
 
+/* table of maximum allowed thread */
 extern lock_status_t lock_max_thread[NUM_LOCK];
 
 /* init lock */

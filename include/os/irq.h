@@ -53,7 +53,7 @@ enum ExcCode
 
 #define NUM_EXCCODE 32
 #define ExcCode 0x7c
-#define IPL 0xff00
+#define IP 0xff00
 
 /* BEV = 0 */
 // Exception Enter Vector
