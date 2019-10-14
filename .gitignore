@@ -1,5 +1,7 @@
+.gitignore
 bootblock
 createimage
 image
 kernel.txt
 main
+.DS_Store
