@@ -77,7 +77,7 @@ typedef struct pcb
     regs_context_t user_context;
     
     /* kernel stack, user stack */
-    uint32_t kernel_stack_top;
+    uint32_t kernel_stack_top; /* 位置不能动 */
     uint32_t user_stack_top;
 
     /* process id, kernel/user thread/process, BLOCK | READY | RUNNING */
