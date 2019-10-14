@@ -18,10 +18,10 @@ sched.h\sched.c:
 	1.pcb_t增加了唤起时间和优先级
 	2.scheduler: 	a.在调度前检查sleep的队列block_queue
 			b.重置当前进程的优先级
-			c.调度后重置时间片
+			c.如果是时钟中断，调度后重置时间片
 	3.每次阻塞进程放出时立即增加将该进程的优先级
 
-	注: irq_timer中不重置时间片, 只有在scheduler中重置时间片
+	注: 在scheduler中重置时间片，只有时钟中断时才会重置
 
 lock_task2.c: 测试Bonus，详细说明见设计文档
 
@@ -34,7 +34,7 @@ lock_task2.c: 测试Bonus，详细说明见设计文档
    |   |   |--entry.S                 : 完成异常处理(中断、系统调用)以及用于C语言调用的汇编函数 
    |   |   |--syscall.S               : 完成invoke_syscall()
    |--drivers
-   |   |--screen.c                    : 完善screen_write()
+   |   |--screen.c                    : init_screen()中添加screen_clear()
    |--include/os 
    |   |--lock.h                      : 完成mutex_lock_t定义
    |   |--sched.h                     : 完善pcb_t定义
