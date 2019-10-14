@@ -47,11 +47,6 @@ void scheduler(void)
 	if (current_running->priority)
 		current_running->priority = initial_priority[current_running->pid];
 
-	get_ticks(); // 更新 time_elapsed
-	reset_cp0_count();
-
-	if (!queue_is_empty(&block_queue)) check_sleeping(); // check sleeping
-
 	// 调用优先级最大的进程, 在相同优先级下满足先进先出
 	current_running = ready_queue.head;
 	for (_item = ready_queue.head; _item; _item = _item->next)
@@ -66,13 +61,16 @@ void scheduler(void)
 	for (_item = ready_queue.head; _item; _item = _item->next) 
 		if (_item->priority) _item->priority++;
 
-	get_ticks(); // 更新 time_elapsed
-	reset_cp0_count(); set_cp0_compare(TIMER_INTERVAL); // 重置时间片
+	if (rst_timer) {
+		get_ticks(); // 更新 time_elapsed
+		reset_cp0_count(); set_cp0_compare(TIMER_INTERVAL); // 重置时间片
+		rst_timer = 0;
+		if (!queue_is_empty(&block_queue)) check_sleeping(); // check sleeping
+	}
 }
 
 void do_sleep(uint32_t sleep_time)
 {
-	get_ticks(); reset_cp0_count();
 	current_running->wakeup_time = get_timer() + sleep_time;
 	current_running->status = TASK_BLOCKED;
 	queue_push(&block_queue, current_running);

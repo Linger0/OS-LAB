@@ -3,8 +3,12 @@
 #include "sched.h"
 #include "string.h"
 
+int rst_timer = 0;
+
 static void irq_timer()
 {
+    screen_reflush();
+    rst_timer = 1;
     do_scheduler(); // 由 scheduler 重置 cp0_count & cp0_compare
     return;
 }

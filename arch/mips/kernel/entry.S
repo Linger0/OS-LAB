@@ -169,7 +169,7 @@ exception_handler_begin:
     // jmp exception_handler[i] which decided by CP0_CAUSE
     SAVE_CONTEXT(USER)
     lw      k0, current_running
-    lw      sp, OFFSET_REG29(k0)    // 内核栈
+    lw      sp, OFFSET_REG29(k0)
     mfc0    k1, CP0_CAUSE
     and     k1, k1, CAUSE_EXCCODE
     la      k0, exception_handler

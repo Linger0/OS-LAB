@@ -66,6 +66,8 @@ enum ExcCode
 
 #define TIMER_INTERVAL 150000
 
+extern int rst_timer;
+
 void interrupt_helper(uint32_t, uint32_t);
 void set_cp0_compare(uint32_t);
 
