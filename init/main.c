@@ -137,8 +137,7 @@ static void init_exception_handler()
 
 static void init_exception()
 {
-	uint32_t cp0_status;
-	cp0_status = initial_cp0_status;
+	uint32_t cp0_status = initial_cp0_status;
 	cp0_status &= ~0x3;
 	set_cp0_status(cp0_status);
 
@@ -192,8 +191,7 @@ void __attribute__((section(".entry_function"))) _start(void)
 	printk("> [INIT] SCREEN initialization succeeded.\n");
 
 	// Enable interrupt
-	uint32_t cp0_status;
-	cp0_status = get_cp0_status();
+	uint32_t cp0_status = get_cp0_status();
 	cp0_status |= 0x1;
 	set_cp0_status(cp0_status);
 
