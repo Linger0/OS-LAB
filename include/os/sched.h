@@ -80,11 +80,6 @@ typedef struct pcb
     uint32_t kernel_stack_top; /* 位置不能动 */
     uint32_t user_stack_top;
 
-    /* process id, kernel/user thread/process, BLOCK | READY | RUNNING */
-    pid_t pid;
-    task_type_t type;
-    task_status_t status;
-
     /* wakeup time */
     uint32_t wakeup_time;
 
@@ -97,6 +92,11 @@ typedef struct pcb
 
     /* parent process */
     // struct pcb *parent;
+
+    /* process id, kernel/user thread/process, BLOCK | READY | RUNNING */
+    pid_t pid;
+    task_type_t type;
+    task_status_t status;
 
     /* previous, next pointer */
     void *prev;
@@ -127,9 +127,10 @@ extern pid_t process_id;
 
 extern pcb_t pcb[NUM_MAX_TASK];
 extern uint32_t initial_cp0_status;
-extern uint32_t initial_priority[];
+extern uint32_t initial_priority;
 
 void new_proc_run(void);
+
 void do_scheduler(void);
 void do_sleep(uint32_t);
 

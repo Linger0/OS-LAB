@@ -30,8 +30,6 @@
 
 #include "queue.h"
 
-#define NUM_LOCK 2
-
 typedef enum {
     LOCKED,
     UNLOCKED,
@@ -47,9 +45,6 @@ typedef struct mutex_lock
     lock_status_t status; // 作为允许线程数
     queue_t lock_queue;
 } mutex_lock_t;
-
-/* table of maximum allowed thread */
-extern lock_status_t lock_max_thread[NUM_LOCK];
 
 /* init lock */
 void spin_lock_init(spin_lock_t *lock);

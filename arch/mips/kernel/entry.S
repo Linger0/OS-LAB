@@ -114,51 +114,12 @@ END(asm_start)
     mtc0    k0, CP0_EPC
 .endm
 
-LEAF(init_cp0_status)
-    // Set CP0_STATUS in main().
-    and     a0, ~0x3
-    mtc0    a0, CP0_STATUS
-    jr      ra
-END(init_cp0_status)
-
-LEAF(init_enable_int)
-    // Enable interrupt in main().
-    mfc0    k0, CP0_STATUS
-    ori     k0, STATUS_IE
-    mtc0    k0, CP0_STATUS
-    jr      ra
-END(init_enable_int)
-
-LEAF(new_proc_run)
-    // New process start here.
-    RESTORE_CONTEXT(USER)
-    eret
-END(new_proc_run)
-
-LEAF(get_cp0_count)
-    // return CP0_COUNT
-    mfc0    v0, CP0_COUNT
-    jr      ra
-END(get_cp0_count)
-
 NESTED(do_scheduler, 0, ra)
     SAVE_CONTEXT(KERNEL)
     jal     scheduler
     RESTORE_CONTEXT(KERNEL)
     jr      ra	
 END(do_scheduler)
-
-LEAF(reset_cp0_count)
-    // reset CP0_COUNT
-    mtc0    zero, CP0_COUNT
-    jr      ra
-END(reset_cp0_count)
-
-LEAF(set_cp0_compare)
-    // set CP0_COMPARE
-    mtc0    a0, CP0_COMPARE
-    jr      ra
-END(set_cp0_compare)
 
 .global exception_handler_begin
 .global exception_handler_end
@@ -207,3 +168,39 @@ NESTED(handle_other, 0, sp)
     RESTORE_CONTEXT(USER)
     eret
 END(handle_other)
+
+LEAF(new_proc_run)
+    // New process start here.
+    RESTORE_CONTEXT(USER)
+    eret
+END(new_proc_run)
+
+LEAF(get_cp0_status)
+    // Set CP0_STATUS.
+    mfc0    v0, CP0_STATUS
+    jr      ra
+END(get_cp0_status)
+
+LEAF(set_cp0_status)
+    // Set CP0_STATUS.
+    mtc0    a0, CP0_STATUS
+    jr      ra
+END(set_cp0_status)
+
+LEAF(get_cp0_count)
+    // return CP0_COUNT
+    mfc0    v0, CP0_COUNT
+    jr      ra
+END(get_cp0_count)
+
+LEAF(reset_cp0_count)
+    // reset CP0_COUNT
+    mtc0    zero, CP0_COUNT
+    jr      ra
+END(reset_cp0_count)
+
+LEAF(set_cp0_compare)
+    // set CP0_COMPARE
+    mtc0    a0, CP0_COMPARE
+    jr      ra
+END(set_cp0_compare)

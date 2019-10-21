@@ -51,7 +51,6 @@ enum ExcCode
     WATCH = 23 // 23
 };
 
-#define NUM_EXCCODE 32
 #define ExcCode 0x7c
 #define IP 0xff00
 
@@ -69,10 +68,12 @@ enum ExcCode
 extern int rst_timer;
 
 void interrupt_helper(uint32_t, uint32_t);
-void set_cp0_compare(uint32_t);
 
-void init_cp0_status(uint32_t);
-void init_enable_int(void);
+/* CP0 register */
+uint32_t get_cp0_status(void);
+void set_cp0_status(uint32_t);
+void reset_cp0_count(void);
+void set_cp0_compare(uint32_t);
 
 /* exception handler entery */
 extern void exception_handler_entry(void);

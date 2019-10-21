@@ -9,7 +9,7 @@ main:
 
 	# 2) task2 call BIOS read kernel in SD card and jump to kernel start
 	lw	$a0, kernel
-	li	$a1, 0x200 # kernel offset
+	li	$a1, 0x200 	# kernel offset
 	lw	$a2, 0xa08001f4	# kernel size recorded here by creatimage
 	lw	$t2, read_sd_card
 	jal	$t2

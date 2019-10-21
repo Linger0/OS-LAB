@@ -21,11 +21,8 @@ void spin_lock_release(spin_lock_t *lock)
 
 void do_mutex_lock_init(mutex_lock_t *lock)
 {
-	int i;
-	for (i = 0; i < NUM_LOCK; i++) {
-		lock[i].status = lock_max_thread[i];
-		queue_init(&lock[i].lock_queue);
-	}
+	lock->status = UNLOCKED;
+	queue_init(&lock->lock_queue);
 }
 
 void do_mutex_lock_acquire(mutex_lock_t *lock)

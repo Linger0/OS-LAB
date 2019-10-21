@@ -32,11 +32,11 @@
 #include "common.h"
 #include "syscall.h"
 
-uint32_t initial_priority[] = {0, 8, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
-uint32_t initial_cp0_status = 0x10008003;
+uint32_t initial_priority = 30;
+uint32_t initial_cp0_status = 0x30008003;
 
 pcb_t pcbk;
-void (*exception_handler[NUM_EXCCODE])();
+void (*exception_handler[32])();
 int (*syscall[NUM_SYSCALLS])();
 
 static void init_pcb()
@@ -50,7 +50,7 @@ static void init_pcb()
 	pcbk.pid = process_id++;
 	pcbk.type = KERNEL_THREAD;
 	pcbk.status = TASK_RUNNING;
-	pcbk.priority = initial_priority[0]; // 内核线程优先级最小
+	pcbk.priority = 0; // 内核线程优先级最小
 	pcbk.kernel_stack_top = 
 	pcbk.kernel_context.regs[29] = initial_stack;
 
@@ -65,7 +65,7 @@ static void init_pcb()
 		pcb[i].pid = process_id++;
 		pcb[i].type = sched1_tasks[i]->type;
 		pcb[i].status = TASK_READY;
-		pcb[i].priority = initial_priority[i + 1];
+		pcb[i].priority = initial_priority;
 
 		pcb[i].kernel_stack_top = initial_stack; initial_stack -= STACK_SIZE;
 		pcb[i].user_stack_top = initial_stack; initial_stack -= STACK_SIZE;
@@ -87,7 +87,7 @@ static void init_pcb()
 		pcb[i].pid = process_id++;
 		pcb[i].type = lock_tasks[j]->type;
 		pcb[i].status = TASK_READY;
-		pcb[i].priority = initial_priority[i + 1];
+		pcb[i].priority = initial_priority;
 
 		pcb[i].kernel_stack_top = initial_stack; initial_stack -= STACK_SIZE;
 		pcb[i].user_stack_top = initial_stack; initial_stack -= STACK_SIZE;
@@ -109,7 +109,7 @@ static void init_pcb()
 		pcb[i].pid = process_id++;
 		pcb[i].type = timer_tasks[j]->type;
 		pcb[i].status = TASK_READY;
-		pcb[i].priority = initial_priority[i + 1];
+		pcb[i].priority = initial_priority;
 
 		pcb[i].kernel_stack_top = initial_stack; initial_stack -= STACK_SIZE;
 		pcb[i].user_stack_top = initial_stack; initial_stack -= STACK_SIZE;
@@ -128,7 +128,7 @@ static void init_pcb()
 static void init_exception_handler()
 {
 	int i;
-	for (i = 0; i < NUM_EXCCODE; i++) {
+	for (i = 0; i < 32; i++) {
 		exception_handler[i] = (void (*)())handle_other;
 	}
 	exception_handler[INT] = (void (*)())handle_int;
@@ -137,11 +137,17 @@ static void init_exception_handler()
 
 static void init_exception()
 {
-	init_cp0_status(initial_cp0_status);
+	uint32_t cp0_status;
+	cp0_status = initial_cp0_status;
+	cp0_status &= ~0x3;
+	set_cp0_status(cp0_status);
+
 	init_exception_handler();
+
 	memcpy(	(uint8_t *)(BEV0_EBASE + BEV0_OFFSET), 
 		(uint8_t *)exception_handler_entry, 
 		(uint32_t)(exception_handler_end - exception_handler_begin) );
+	
 	reset_cp0_count(); set_cp0_compare(TIMER_INTERVAL);
 }
 
@@ -185,8 +191,11 @@ void __attribute__((section(".entry_function"))) _start(void)
 	init_screen();
 	printk("> [INIT] SCREEN initialization succeeded.\n");
 
-	// TODO Enable interrupt
-	init_enable_int();
+	// Enable interrupt
+	uint32_t cp0_status;
+	cp0_status = get_cp0_status();
+	cp0_status |= 0x1;
+	set_cp0_status(cp0_status);
 
 	while (1)
 	{
