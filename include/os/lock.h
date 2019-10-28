@@ -31,8 +31,8 @@
 #include "queue.h"
 
 typedef enum {
-    LOCKED,
     UNLOCKED,
+    LOCKED,
 } lock_status_t;
 
 typedef struct spin_lock
@@ -42,8 +42,11 @@ typedef struct spin_lock
 
 typedef struct mutex_lock
 {
-    lock_status_t status; // 作为允许线程数
-    queue_t lock_queue;
+    lock_status_t status;
+    queue_t locked_queue;
+    
+    void *prev;
+    void *next;
 } mutex_lock_t;
 
 /* init lock */

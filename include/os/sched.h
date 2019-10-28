@@ -33,8 +33,9 @@
 #include "queue.h"
 
 #define NUM_MAX_TASK 16
-#define STACK_BASE 0xa0f00000
-#define STACK_SIZE 4096 /* 4KB */
+
+#define STACK_BASE 0xa0effffc
+#define STACK_SIZE 4096
 
 /* used to save register infomation */
 typedef struct regs_context
@@ -77,28 +78,33 @@ typedef struct pcb
     regs_context_t user_context;
     
     /* kernel stack, user stack */
-    uint32_t kernel_stack_top; /* 位置不能动 */
+    uint32_t kernel_stack_top; /* 位置不能动 */ /* 不能清除 */
     uint32_t user_stack_top;
 
     /* wakeup time */
     uint32_t wakeup_time;
 
+    /* wait pid */
+    pid_t wait_pid;
+
     /* priority */
-    uint32_t priority;
+    // uint32_t priority;
 
-    /* open files */
-
-    /* page table */
-
-    /* parent process */
-    // struct pcb *parent;
-
-    /* process id, kernel/user thread/process, BLOCK | READY | RUNNING */
+/* 下面的必须初始化 */
+    /* process id */
     pid_t pid;
-    task_type_t type;
-    task_status_t status;
 
-    /* previous, next pointer */
+    /* kernel/user thread/process */
+    task_type_t type;
+
+    /* BLOCK | READY | RUNNING */
+    task_status_t status; /* 注意 */
+
+    /* lock */
+    queue_t lock_queue;
+
+    /* belong, previous, next pointer */
+    queue_t *belong;
     void *prev;
     void *next;
 
@@ -111,6 +117,7 @@ typedef struct pcb
 /* task information, used to init PCB */
 typedef struct task_info
 {
+    char *name;
     uint32_t entry_point;
     task_type_t type;
 } task_info_t;
@@ -118,8 +125,11 @@ typedef struct task_info
 /* ready queue to run */
 extern queue_t ready_queue;
 
+/* block queue to sleep */
+extern queue_t sleep_queue;
+
 /* block queue to wait */
-extern queue_t block_queue;
+extern queue_t wait_queue;
 
 /* current running task PCB */
 extern pcb_t *current_running;
@@ -127,9 +137,14 @@ extern pid_t process_id;
 
 extern pcb_t pcb[NUM_MAX_TASK];
 extern uint32_t initial_cp0_status;
-extern uint32_t initial_priority;
+// extern uint32_t initial_priority;
 
 void new_proc_run(void);
+
+void do_spawn(task_info_t *);
+void do_kill(pid_t);
+void do_exit(void);
+void do_waitpid(pid_t);
 
 void do_scheduler(void);
 void do_sleep(uint32_t);

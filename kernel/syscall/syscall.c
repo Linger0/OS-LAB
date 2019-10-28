@@ -44,6 +44,11 @@ void sys_move_cursor(int x, int y)
     invoke_syscall(SYSCALL_CURSOR, x, y, IGNORE);
 }
 
+void sys_clear(int line1, int line2)
+{
+    invoke_syscall(SYSCALL_CLEAR, line1, line2, IGNORE);
+}
+
 void mutex_lock_init(mutex_lock_t *lock)
 {
     invoke_syscall(SYSCALL_MUTEX_LOCK_INIT, (int)lock, IGNORE, IGNORE);
@@ -57,4 +62,24 @@ void mutex_lock_acquire(mutex_lock_t *lock)
 void mutex_lock_release(mutex_lock_t *lock)
 {
     invoke_syscall(SYSCALL_MUTEX_LOCK_RELEASE, (int)lock, IGNORE, IGNORE);
+}
+
+void sys_spawn(task_info_t *task) 
+{
+    invoke_syscall(SYSCALL_SPAWN, (int)task, IGNORE, IGNORE);
+}
+
+void sys_kill(pid_t pid)
+{
+    invoke_syscall(SYSCALL_KILL, (int)pid, IGNORE, IGNORE);
+}
+
+void sys_exit(void)
+{
+    invoke_syscall(SYSCALL_EXIT, IGNORE, IGNORE, IGNORE);
+}
+
+void sys_waitpid(pid_t pid)
+{
+    invoke_syscall(SYSCALL_WAIT, (int)pid, IGNORE, IGNORE);
 }

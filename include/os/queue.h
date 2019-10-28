@@ -47,4 +47,10 @@ void *queue_dequeue(queue_t *queue);
 /* remove this item and return next item */
 void *queue_remove(queue_t *queue, void *item);
 
+void lqueue_push(queue_t *queue, void *item);
+
+void *lqueue_dequeue(queue_t *queue);
+
+/* remove this item and return next item */
+void *lqueue_remove(queue_t *queue, void *item);
 #endif

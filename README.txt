@@ -1,54 +1,54 @@
+ï»¿
+è®¾è®¡æ‘˜è¦:
 
-Éè¼ÆÕªÒª:
-
-main.c:	1.init_pcbÖĞ·ÖÅäÁËÒ»¿éÄÚºË×Ô¼ºµÄPCB²¢Ê¹current_runningÖ¸ÏòËü
-	2.³õÊ¼»¯Ã¿¸öÏß³ÌµÄÓÅÏÈ¼¶£¬³õÊ¼ÓÅÏÈ¼¶ÔÚ¿ªÍ·¶¨ÒåµÄÊıÖµinitial_priorityÖĞ
+main.c:	1.init_pcbä¸­åˆ†é…äº†ä¸€å—å†…æ ¸è‡ªå·±çš„PCBå¹¶ä½¿current_runningæŒ‡å‘å®ƒ
+	2.åˆå§‹åŒ–æ¯ä¸ªçº¿ç¨‹çš„ä¼˜å…ˆçº§ï¼Œåˆå§‹ä¼˜å…ˆçº§åœ¨å¼€å¤´å®šä¹‰çš„æ•°å€¼initial_priorityä¸­
 
 entry.S:
-	1.Ìá¹©ÓëCP0¼Ä´æÆ÷Ïà¹ØµÄº¯Êı(Èçget_cp0_count())ÓÃÓÚCÓïÑÔµ÷ÓÃ
-	2.ÏµÍ³µ÷ÓÃ·µ»ØÇ°CP0_EPCµÄÖµ+4
+	1.æä¾›ä¸CP0å¯„å­˜å™¨ç›¸å…³çš„å‡½æ•°(å¦‚get_cp0_count())ç”¨äºCè¯­è¨€è°ƒç”¨
+	2.ç³»ç»Ÿè°ƒç”¨è¿”å›å‰CP0_EPCçš„å€¼+4
 
 lock.h\lock.c: 
-	1.mutex_lock_tÖĞÌí¼ÓÁË×èÈû¶ÓÁĞlock_queue, Ã¿°ÑËøÓµÓĞ×Ô¼ºµÄ×èÈû¶ÓÁĞ
-	2.lock_statusÍ¬Ê±×÷ÎªËøµ±Ç°ÔÊĞíµÄÏß³ÌÊı£¬³õÊ¼»¯Ê±ÉèÎªËø×î´óÔÊĞíµÄÏß³ÌÊı£¨Bonus£©
-	3.Ã¿´ÎÊÍ·ÅËø»áÁ¢¼´´Ólock_queue·Å³öÒ»¸ö½ø³Ì²¢Ê¹Æä»ñµÃËø
-	4.ÇëÇó»¥³âËøÖ»Ğè¼ì²éÒ»´ÎËøµÄ×´Ì¬
+	1.mutex_lock_tä¸­æ·»åŠ äº†é˜»å¡é˜Ÿåˆ—locked_queue, æ¯æŠŠé”æ‹¥æœ‰è‡ªå·±çš„é˜»å¡é˜Ÿåˆ—
+	2.lock_statusåŒæ—¶ä½œä¸ºé”å½“å‰å…è®¸çš„çº¿ç¨‹æ•°ï¼Œåˆå§‹åŒ–æ—¶è®¾ä¸ºé”æœ€å¤§å…è®¸çš„çº¿ç¨‹æ•°ï¼ˆBonusï¼‰
+	3.æ¯æ¬¡é‡Šæ”¾é”ä¼šç«‹å³ä»locked_queueæ”¾å‡ºä¸€ä¸ªè¿›ç¨‹å¹¶ä½¿å…¶è·å¾—é”
+	4.è¯·æ±‚äº’æ–¥é”åªéœ€æ£€æŸ¥ä¸€æ¬¡é”çš„çŠ¶æ€
 
 sched.h\sched.c:
-	1.pcb_tÔö¼ÓÁË»½ÆğÊ±¼äºÍÓÅÏÈ¼¶
-	2.scheduler: 	a.ÔÚµ÷¶ÈÇ°¼ì²ésleepµÄ¶ÓÁĞblock_queue
-			b.ÖØÖÃµ±Ç°½ø³ÌµÄÓÅÏÈ¼¶
-			c.Èç¹ûÊÇÊ±ÖÓÖĞ¶Ï£¬µ÷¶ÈºóÖØÖÃÊ±¼äÆ¬
-	3.Ã¿´Î×èÈû½ø³Ì·Å³öÊ±Á¢¼´Ôö¼Ó½«¸Ã½ø³ÌµÄÓÅÏÈ¼¶
+	1.pcb_tå¢åŠ äº†å”¤èµ·æ—¶é—´å’Œä¼˜å…ˆçº§
+	2.scheduler: 	a.åœ¨è°ƒåº¦å‰æ£€æŸ¥sleepçš„é˜Ÿåˆ—blocked_queue
+			b.é‡ç½®å½“å‰è¿›ç¨‹çš„ä¼˜å…ˆçº§
+			c.å¦‚æœæ˜¯æ—¶é’Ÿä¸­æ–­ï¼Œè°ƒåº¦åé‡ç½®æ—¶é—´ç‰‡
+	3.æ¯æ¬¡é˜»å¡è¿›ç¨‹æ”¾å‡ºæ—¶ç«‹å³å¢åŠ å°†è¯¥è¿›ç¨‹çš„ä¼˜å…ˆçº§
 
-	×¢: ÔÚschedulerÖĞÖØÖÃÊ±¼äÆ¬£¬Ö»ÓĞÊ±ÖÓÖĞ¶ÏÊ±²Å»áÖØÖÃ
+	æ³¨: åœ¨schedulerä¸­é‡ç½®æ—¶é—´ç‰‡ï¼Œåªæœ‰æ—¶é’Ÿä¸­æ–­æ—¶æ‰ä¼šé‡ç½®
 
-lock_task2.c: ²âÊÔBonus£¬ÏêÏ¸ËµÃ÷¼ûÉè¼ÆÎÄµµ
+lock_task2.c: æµ‹è¯•Bonusï¼Œè¯¦ç»†è¯´æ˜è§è®¾è®¡æ–‡æ¡£
 
 
-ĞŞ¸ÄµÄÎÄ¼şÄ¿Â¼½á¹¹:
+ä¿®æ”¹çš„æ–‡ä»¶ç›®å½•ç»“æ„:
 
    |--arch/mips
-   |   |--boot/bootblock.S            : ¿½±´ÊµÑé1µÄbootblock
+   |   |--boot/bootblock.S            : æ‹·è´å®éªŒ1çš„bootblock
    |   |--kernel
-   |   |   |--entry.S                 : Íê³ÉÒì³£´¦Àí(ÖĞ¶Ï¡¢ÏµÍ³µ÷ÓÃ)ÒÔ¼°ÓÃÓÚCÓïÑÔµ÷ÓÃµÄ»ã±àº¯Êı 
-   |   |   |--syscall.S               : Íê³Éinvoke_syscall()
+   |   |   |--entry.S                 : å®Œæˆå¼‚å¸¸å¤„ç†(ä¸­æ–­ã€ç³»ç»Ÿè°ƒç”¨)ä»¥åŠç”¨äºCè¯­è¨€è°ƒç”¨çš„æ±‡ç¼–å‡½æ•° 
+   |   |   |--syscall.S               : å®Œæˆinvoke_syscall()
    |--drivers
-   |   |--screen.c                    : init_screen()ÖĞÌí¼Óscreen_clear()
+   |   |--screen.c                    : init_screen()ä¸­æ·»åŠ screen_clear()
    |--include/os 
-   |   |--lock.h                      : Íê³Émutex_lock_t¶¨Òå
-   |   |--sched.h                     : ÍêÉÆpcb_t¶¨Òå
+   |   |--lock.h                      : å®Œæˆmutex_lock_tå®šä¹‰
+   |   |--sched.h                     : å®Œå–„pcb_tå®šä¹‰
    |--init
-   |   |--main.c                      : Íê³Éinit_pcb
+   |   |--main.c                      : å®Œæˆinit_pcb
    |--kernel/
-   |   |--irq/irq.c                   : Íê³ÉÖĞ¶ÏÅĞ¶Ïinterrupt_helper()ºÍÊ¼ÖÕÖĞ¶Ïirq_timer()
-   |   |--locking/lock.c              : Íê³É»¥³âËøµÄ³õÊ¼»¯¡¢ÇëÇóºÍÊÍ·Å
+   |   |--irq/irq.c                   : å®Œæˆä¸­æ–­åˆ¤æ–­interrupt_helper()å’Œå§‹ç»ˆä¸­æ–­irq_timer()
+   |   |--locking/lock.c              : å®Œæˆäº’æ–¥é”çš„åˆå§‹åŒ–ã€è¯·æ±‚å’Œé‡Šæ”¾
    |   |--sched
-   |   |   |--sched.c                 : Íê³Éscheduler¡¢do_blockÓëdo_unblock_one, ÆäÖĞĞŞ¸ÄÁËdo_unblock_oneµÄ·µ»ØÖµÎªint
-   |   |   |--time.c                  : get_tick()ÖĞ¸üĞÂtime_elapsed
-   |   |--syscall/syscall.c           : È¥µô¡°syscall[fn](arg1, arg2, arg3)¡±Ç°µÄ×¢ÊÍ
+   |   |   |--sched.c                 : å®Œæˆschedulerã€do_blockä¸do_unblock_one, å…¶ä¸­ä¿®æ”¹äº†do_unblock_oneçš„è¿”å›å€¼ä¸ºint
+   |   |   |--time.c                  : get_tick()ä¸­æ›´æ–°time_elapsed
+   |   |--syscall/syscall.c           : å»æ‰â€œsyscall[fn](arg1, arg2, arg3)â€å‰çš„æ³¨é‡Š
    |   |
-   |--test/test_project2/test_lock2.c : ĞŞ¸ÄËøÈÎÎñÒÔ²âÊÔBonus
-   |--tools/createimage.c             : ¿½±´ÊµÑé1µÄcreateimage
-   |--README.txt                      : ±¾ÎÄµµ
+   |--test/test_project2/test_lock2.c : ä¿®æ”¹é”ä»»åŠ¡ä»¥æµ‹è¯•Bonus
+   |--tools/createimage.c             : æ‹·è´å®éªŒ1çš„createimage
+   |--README.txt                      : æœ¬æ–‡æ¡£
 

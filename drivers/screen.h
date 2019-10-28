@@ -30,21 +30,27 @@
 extern int screen_cursor_x;
 extern int screen_cursor_y;
 
+#define SCREEN_WIDTH  80
+#define SCREEN_HEIGHT 30
+
+#define SPLIT_LOC 16
+
 void vt100_move_cursor(int, int);
 
 /* configuring screen properties */
 void init_screen(void);
 
 /* clear screen */
-void screen_clear(void);
+void screen_clear(int, int);
 
 /* reflush screen buffer */
 void screen_reflush(void);
 
 /* screen write string */
+void screen_write_ch(char ch);
 void screen_write(char *buff);
 
-/* move cursor int (x,y) */
+/* move cursor */
 void screen_move_cursor(int x, int y);
 
 #endif

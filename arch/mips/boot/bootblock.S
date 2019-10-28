@@ -18,7 +18,7 @@ main:
 
 # 4) while(1) --> stop here
 stop:
-	j stop
+	j 	stop
 .data
 
 msg: .asciz "It's a bootloader...\n"

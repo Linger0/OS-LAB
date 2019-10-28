@@ -31,6 +31,7 @@
 #include "type.h"
 #include "sync.h"
 #include "queue.h"
+#include "sched.h"
 
 #define IGNORE 0
 #define NUM_SYSCALLS 64
@@ -46,10 +47,16 @@
 #define SYSCALL_READ 21
 #define SYSCALL_CURSOR 22
 #define SYSCALL_REFLUSH 23
+#define SYSCALL_CLEAR 24
 
 #define SYSCALL_MUTEX_LOCK_INIT 30
 #define SYSCALL_MUTEX_LOCK_ACQUIRE 31
 #define SYSCALL_MUTEX_LOCK_RELEASE 32
+
+#define SYSCALL_SPAWN 35
+#define SYSCALL_KILL 36
+#define SYSCALL_EXIT 37
+#define SYSCALL_WAIT 38
 
 /* syscall function pointer */
 int (*syscall[NUM_SYSCALLS])();
@@ -65,10 +72,16 @@ void sys_unblock_all(queue_t *);
 
 void sys_write(char *);
 void sys_move_cursor(int, int);
-void sys_reflush();
+void sys_reflush(void);
+void sys_clear(int, int);
 
 void mutex_lock_init(mutex_lock_t *);
 void mutex_lock_acquire(mutex_lock_t *);
 void mutex_lock_release(mutex_lock_t *);
+
+void sys_spawn(task_info_t *);
+void sys_kill(pid_t);
+void sys_exit(void);
+void sys_waitpid(pid_t);
 
 #endif

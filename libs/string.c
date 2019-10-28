@@ -34,33 +34,42 @@ void bzero(void *dest, uint32_t len)
 
 int strcmp(char *str1, char *str2)
 {
-	while (*str1 && *str2 && (*str1++ == *str2++))
+	while (*str1 && *str2 && (*str1 == *str2))
 	{
+		str1++; 
+		str2++;
 	};
 
-	if (*str1 == '\0' && *str2 == '\0')
-	{
-		return 0;
-	}
-
-	if (*str1 == '\0')
-	{
-		return -1;
-	}
-
-	return 1;
+	return (*str1) - (*str2);
 }
 
-char *strcpy(char *dest, char *src)
+int memcmp(char *str1, char *str2, uint32_t size)
 {
-	char *tmp = dest;
+	int i;
 
-	while (*src)
+	for (i = 0; i < size; i++)
 	{
-		*dest++ = *src++;
+		if (str1[i] > str2[i])
+		{
+			return 1;
+		}
+		else if (str1[i] < str2[i])
+		{
+			return -1;
+		}
+	}
+	return 0;
+}
+
+void strcpy(char *dest, char *src)
+{
+	int l = strlen(src);
+	int i;
+
+	for (i = 0; i < l; i++)
+	{
+		dest[i] = src[i];
 	}
 
-	*dest = '\0';
-
-	return tmp;
+	dest[i] = '\0';
 }

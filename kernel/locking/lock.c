@@ -9,8 +9,7 @@ void spin_lock_init(spin_lock_t *lock)
 
 void spin_lock_acquire(spin_lock_t *lock)
 {
-	while (LOCKED == lock->status)
-		;
+	while (LOCKED == lock->status);
 	lock->status = LOCKED;
 }
 
@@ -22,21 +21,26 @@ void spin_lock_release(spin_lock_t *lock)
 void do_mutex_lock_init(mutex_lock_t *lock)
 {
 	lock->status = UNLOCKED;
-	queue_init(&lock->lock_queue);
+	queue_init(&lock->locked_queue);
 }
 
 void do_mutex_lock_acquire(mutex_lock_t *lock)
 {
-	if (lock->status == LOCKED)
-		do_block(&lock->lock_queue);
-	else
-		lock->status--;
+	if (lock->status == LOCKED) {
+		do_block(&lock->locked_queue);
+	} else {
+		lock->status = LOCKED;
+	}
+	lqueue_push(&current_running->lock_queue, lock);
 }
 
 void do_mutex_lock_release(mutex_lock_t *lock)
 {
-	if (!queue_is_empty(&lock->lock_queue))
-		do_unblock_one(&lock->lock_queue);
-	else
-		lock->status++;
+	lqueue_remove(&current_running->lock_queue, lock);
+	if (!queue_is_empty(&lock->locked_queue)) {
+		do_unblock_one(&lock->locked_queue);
+	}
+	else {
+		lock->status = UNLOCKED;
+	}
 }

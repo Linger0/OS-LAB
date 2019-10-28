@@ -2,9 +2,6 @@
 #include "common.h"
 #include "string.h"
 
-#define SCREEN_WIDTH    80
-#define SCREEN_HEIGHT   50
-
 int screen_cursor_x;
 int screen_cursor_y;
 
@@ -33,18 +30,83 @@ static void vt100_hidden_cursor()
     printk("%c[?25l", 27);
 }
 
+// scroll screen range(line1, line2)
+static void screen_scroll(int line1, int line2)
+{
+    int i, j;
+
+    for (i = line1; i <= line2; i++)
+    {
+        for (j = 0; j < SCREEN_WIDTH; j++)
+        {
+            old_screen[i * SCREEN_WIDTH + j] = 0;
+        }
+    }
+
+    for (i = line1; i <= line2; i++)
+    {
+        for (j = 0; j < SCREEN_WIDTH; j++)
+        {
+            if (i == line2)
+            {
+                new_screen[i * SCREEN_WIDTH + j] = ' ';
+            }
+            else
+            {
+                new_screen[i * SCREEN_WIDTH + j] = new_screen[(i + 1) * SCREEN_WIDTH + j];
+            }
+        }
+    }
+}
+
 /* write a char */
-static void screen_write_ch(char ch)
+void screen_write_ch(char ch)
 {
     if (ch == '\n')
     {
-        screen_cursor_x = 1;
+        screen_cursor_x = 0;
+        screen_cursor_y++;
+    }
+    else if (ch == 8) // backspace
+    {
+        if (screen_cursor_x > 0)
+        {
+            screen_cursor_x--;
+            new_screen[screen_cursor_y * SCREEN_WIDTH + screen_cursor_x] = ' ';
+        }
+    }
+    else if (ch == 13) // enter
+    {
+        screen_cursor_x = 0;
         screen_cursor_y++;
     }
     else
     {
-        new_screen[(screen_cursor_y - 1) * SCREEN_WIDTH + (screen_cursor_x - 1)] = ch;
+        new_screen[screen_cursor_y * SCREEN_WIDTH + screen_cursor_x] = ch;
         screen_cursor_x++;
+    }
+
+    if (screen_cursor_x < 0)
+    {
+        screen_cursor_x = 0;
+    }
+
+    if (screen_cursor_x >= SCREEN_WIDTH)
+    {
+        screen_cursor_y++;
+        screen_cursor_x = 0;
+    }
+
+    if (screen_cursor_y < 0)
+    {
+        screen_cursor_y = 0;
+    }
+
+    if (screen_cursor_y >= SCREEN_HEIGHT)
+    {
+        screen_scroll(SPLIT_LOC + 1, SCREEN_HEIGHT - 1); // shell 屏
+        screen_cursor_x = 0;
+        screen_cursor_y = SCREEN_HEIGHT - 1;
     }
 }
 
@@ -52,21 +114,24 @@ void init_screen(void)
 {
     vt100_hidden_cursor();
     vt100_clear();
-    screen_clear();
+    screen_clear(0, SCREEN_HEIGHT - 1);
+    screen_cursor_x = 0;
+    screen_cursor_y = 0;
 }
 
-void screen_clear(void)
+// clear line1 to line2
+void screen_clear(int line1, int line2)
 {
     int i, j;
-    for (i = 0; i < SCREEN_HEIGHT; i++)
+
+    for (i = line1; i <= line2; i++)
     {
         for (j = 0; j < SCREEN_WIDTH; j++)
         {
             new_screen[i * SCREEN_WIDTH + j] = ' ';
+            old_screen[i * SCREEN_WIDTH + j] = 0;
         }
     }
-    screen_cursor_x = 1;
-    screen_cursor_y = 1;
     screen_reflush();
 }
 
@@ -96,7 +161,7 @@ void screen_write(char *buff)
 void screen_reflush(void)
 {
     int i, j;
-    
+
     /* here to reflush screen buffer to serial port */
     for (i = 0; i < SCREEN_HEIGHT; i++)
     {
@@ -105,10 +170,16 @@ void screen_reflush(void)
             /* We only print the data of the modified location. */
             if (new_screen[i * SCREEN_WIDTH + j] != old_screen[i * SCREEN_WIDTH + j])
             {
+                // -----screen-----
+                // | ^ y          |
+                // | |            |
+                // | |            |
+                // |    ---->x    |
+                // ----------------
                 vt100_move_cursor(j + 1, i + 1);
                 port_write_ch(new_screen[i * SCREEN_WIDTH + j]);
                 old_screen[i * SCREEN_WIDTH + j] = new_screen[i * SCREEN_WIDTH + j];
-            } 
+            }
         }
     }
 
