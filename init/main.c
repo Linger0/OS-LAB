@@ -31,6 +31,7 @@
 #include "screen.h"
 #include "common.h"
 #include "syscall.h"
+#include "mailbox.h"
 
 // uint32_t initial_priority = 30;
 uint32_t initial_cp0_status = 0x30008003;
@@ -112,6 +113,15 @@ static void init_syscall(void)
 	syscall[SYSCALL_EXIT] = (int (*)())do_exit;
 	syscall[SYSCALL_KILL] = (int (*)())do_kill;
 	syscall[SYSCALL_WAIT] = (int (*)())do_waitpid;
+	syscall[SYSCALL_SEMAPHORE_INIT] = (int (*)())do_semaphore_init;
+	syscall[SYSCALL_SEMAPHORE_UP] = (int (*)())do_semaphore_up;
+	syscall[SYSCALL_SEMAPHORE_DOWN] = (int (*)())do_semaphore_down;
+	syscall[SYSCALL_CONDITION_INIT] = (int (*)())do_condition_init;
+	syscall[SYSCALL_CONDITION_WAIT] = (int (*)())do_condition_wait;
+	syscall[SYSCALL_CONDITION_SIGNAL] = (int (*)())do_condition_signal;
+	syscall[SYSCALL_CONDITION_BROADCAST] = (int (*)())do_condition_broadcast;
+	syscall[SYSCALL_BARRIER_INIT] = (int (*)())do_barrier_init;
+	syscall[SYSCALL_BARRIER_WAIT] = (int (*)())do_barrier_wait;
 }
 
 // jump from bootloader.

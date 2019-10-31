@@ -107,6 +107,12 @@ void do_unblock_one(queue_t *queue)
 void do_unblock_all(queue_t *queue)
 {
 	// unblock all task in the queue
+	pcb_t *unblock_pcb;
+	while (!queue_is_empty(queue)) {
+		unblock_pcb = queue_dequeue(queue);
+		unblock_pcb->status = TASK_READY;
+		queue_push(&ready_queue, unblock_pcb);
+	}
 }
 
 void do_spawn(task_info_t *task) 
@@ -174,4 +180,9 @@ void do_waitpid(pid_t pid)
 	current_running->status = TASK_BLOCKED;
 	queue_push(&wait_queue, current_running);
 	do_scheduler();
+}
+
+void do_getpid(pid_t *pid)
+{
+	*pid = current_running->pid;
 }

@@ -71,7 +71,7 @@ void sys_spawn(task_info_t *task)
 
 void sys_kill(pid_t pid)
 {
-    invoke_syscall(SYSCALL_KILL, (int)pid, IGNORE, IGNORE);
+    invoke_syscall(SYSCALL_KILL, pid, IGNORE, IGNORE);
 }
 
 void sys_exit(void)
@@ -81,5 +81,55 @@ void sys_exit(void)
 
 void sys_waitpid(pid_t pid)
 {
-    invoke_syscall(SYSCALL_WAIT, (int)pid, IGNORE, IGNORE);
+    invoke_syscall(SYSCALL_WAIT, pid, IGNORE, IGNORE);
+}
+
+void semaphore_init(semaphore_t *s, int val) 
+{
+    invoke_syscall(SYSCALL_SEMAPHORE_INIT, (int)s, val, IGNORE);
+}
+
+void semaphore_up(semaphore_t *s)
+{
+    invoke_syscall(SYSCALL_SEMAPHORE_UP, (int)s, IGNORE, IGNORE);
+}
+
+void semaphore_down(semaphore_t *s)
+{
+    invoke_syscall(SYSCALL_SEMAPHORE_DOWN, (int)s, IGNORE, IGNORE);
+}
+
+void condition_init(condition_t *condition)
+{
+    invoke_syscall(SYSCALL_CONDITION_INIT, (int)condition, IGNORE, IGNORE);
+}
+
+void condition_wait(mutex_lock_t *lock, condition_t *condition)
+{
+    invoke_syscall(SYSCALL_CONDITION_WAIT, (int)lock, (int)condition, IGNORE);
+}
+
+void condition_signal(condition_t *condition)
+{
+    invoke_syscall(SYSCALL_CONDITION_SIGNAL, (int)condition, IGNORE, IGNORE);
+}
+
+void condition_broadcast(condition_t *condition)
+{
+    invoke_syscall(SYSCALL_CONDITION_BROADCAST, (int)condition, IGNORE, IGNORE);
+}
+
+void barrier_init(barrier_t *barrier, int goal)
+{
+    invoke_syscall(SYSCALL_BARRIER_INIT, (int)barrier, goal, IGNORE);
+}
+
+void barrier_wait(barrier_t *barrier)
+{
+    invoke_syscall(SYSCALL_BARRIER_WAIT, (int)barrier, IGNORE, IGNORE);
+}
+
+int sys_getpid(void)
+{
+    return current_running->pid;
 }

@@ -53,10 +53,22 @@
 #define SYSCALL_MUTEX_LOCK_ACQUIRE 31
 #define SYSCALL_MUTEX_LOCK_RELEASE 32
 
-#define SYSCALL_SPAWN 35
-#define SYSCALL_KILL 36
-#define SYSCALL_EXIT 37
-#define SYSCALL_WAIT 38
+#define SYSCALL_SPAWN 25
+#define SYSCALL_KILL 26
+#define SYSCALL_EXIT 27
+#define SYSCALL_WAIT 28
+
+#define SYSCALL_SEMAPHORE_INIT 35
+#define SYSCALL_SEMAPHORE_UP 36
+#define SYSCALL_SEMAPHORE_DOWN 37
+
+#define SYSCALL_CONDITION_INIT 40
+#define SYSCALL_CONDITION_WAIT 41
+#define SYSCALL_CONDITION_SIGNAL 42
+#define SYSCALL_CONDITION_BROADCAST 43
+
+#define SYSCALL_BARRIER_INIT 45
+#define SYSCALL_BARRIER_WAIT 46
 
 /* syscall function pointer */
 int (*syscall[NUM_SYSCALLS])();
@@ -83,5 +95,19 @@ void sys_spawn(task_info_t *);
 void sys_kill(pid_t);
 void sys_exit(void);
 void sys_waitpid(pid_t);
+
+void semaphore_init(semaphore_t *, int);
+void semaphore_up(semaphore_t *);
+void semaphore_down(semaphore_t *);
+
+void condition_init(condition_t *);
+void condition_wait(mutex_lock_t *, condition_t *);
+void condition_signal(condition_t *);
+void condition_broadcast(condition_t *);
+
+void barrier_init(barrier_t *, int);
+void barrier_wait(barrier_t *);
+
+int sys_getpid(void);
 
 #endif

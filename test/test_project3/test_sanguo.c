@@ -19,8 +19,8 @@ void SunQuan(void)
     /* Send PID twice, once for LiuBei,
      * and once for the CaoCao */
 
-    // sys_move_cursor(0, 0);
-    // printf("SunQuan(%d): Hello, I am SunQuan          ", myPid);
+    sys_move_cursor(0, 0);
+    printf("SunQuan(%d): Hello, I am SunQuan          ", myPid);
 
     mbox_send(pub, &myPid, sizeof(pid_t));
     mbox_send(pub, &myPid, sizeof(pid_t));
@@ -62,8 +62,8 @@ void LiuBei(void)
     /* Find sunquan's PID */
     mailbox_t *sub = mbox_open("SunQuan-Publish-PID");
 
-    // sys_move_cursor(0, 1);
-    // printf("LiuBei(%d): Hello, I am Liubei          ", myPid);
+    sys_move_cursor(0, 1);
+    printf("LiuBei(%d): Hello, I am Liubei          ", myPid);
 
     for (;;)
     {

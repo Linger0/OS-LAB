@@ -71,7 +71,7 @@ int atoi(char *str) {
 struct task_info task1 = {"task1", (uint32_t)&ready_to_exit_task, USER_PROCESS};
 struct task_info task2 = {"task2", (uint32_t)&wait_lock_task, USER_PROCESS};
 struct task_info task3 = {"task3", (uint32_t)&wait_exit_task, USER_PROCESS};
-/*
+
 struct task_info task4 = {"task4", (uint32_t)&semaphore_add_task1, USER_PROCESS};
 struct task_info task5 = {"task5", (uint32_t)&semaphore_add_task2, USER_PROCESS};
 struct task_info task6 = {"task6", (uint32_t)&semaphore_add_task3, USER_PROCESS};
@@ -87,18 +87,18 @@ struct task_info task12 = {"task12", (uint32_t)&barrier_task3, USER_PROCESS};
 struct task_info task13 = {"SunQuan", (uint32_t)&SunQuan, USER_PROCESS};
 struct task_info task14 = {"LiuBei", (uint32_t)&LiuBei, USER_PROCESS};
 struct task_info task15 = {"CaoCao", (uint32_t)&CaoCao, USER_PROCESS};
-*/
-static struct task_info *test_tasks[16] = {&task1, &task2, &task3/* ,
+
+static struct task_info *test_tasks[16] = {&task1, &task2, &task3,
                                            &task4, &task5, &task6,
                                            &task7, &task8, &task9,
                                            &task10, &task11, &task12,
-                                           &task13, &task14, &task15 */};
+                                           &task13, &task14, &task15};
 static int num_test_tasks = 15;
 
 static char split_line[] = "------------------- COMMAND -------------------";
 static char root[] = "> Linger@myOS: ";
 
-static char *status_str[3] = {
+static char *status_str[4] = {
     "TASK_BLOCKED",
     "TASK_RUNNING",
     "TASK_READY",
@@ -146,7 +146,7 @@ void test_shell()
                     for (i = 0; i < NUM_MAX_TASK; i++) {
                         if (pcb[i].status != TASK_EXITED) {
                             status = pcb[i].status;
-                            printf("[%d] PID: %d  STATUS: %s\r", 
+                            printf("[%d] PID: %d  STATUS: %s\n", 
                                     found, pcb[i].pid, status_str[status]);
                             found++;
                         }
@@ -159,14 +159,14 @@ void test_shell()
                 }
                 else if (strcmp(Cmd, "exec") == (' ' - '\0')) { // exec
                     int n = atoi(Cmd + 5);
-                    printf("[EXEC] Process[%d].\r", n);
+                    printf("[EXEC] Process[%d].\n", n);
                     sys_spawn(test_tasks[n]);
                 }
                 else if (strcmp(Cmd, "kill") == (' ' - '\0')) {
                     int pid = atoi(Cmd + 5);
-                    if (pid == 1) printf("[ERROR] Can't kill shell.\r");
+                    if (pid == 1) printf("[ERROR] Can't kill shell.\n");
                     else {
-                        printf("[KILL] Process pid=%d.\r", pid);
+                        printf("[KILL] Process pid=%d.\n", pid);
                         sys_kill(pid);
                     }
                 }
@@ -176,7 +176,7 @@ void test_shell()
                     process_id = pid;
                 } */
                 else { // other
-                    printf("[ERROR] Unknown command.\r");
+                    printf("[ERROR] Unknown command.\n");
                 }
             }
             printf(root);

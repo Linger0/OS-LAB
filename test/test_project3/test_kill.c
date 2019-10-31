@@ -16,20 +16,25 @@ static pid_t pid;
 void ready_to_exit_task()
 {
     int i = 0, print_location = 0;
-    pid = current_running->pid;
+    pid = sys_getpid();
 
     mutex_lock_acquire(&lock1);
     mutex_lock_acquire(&lock2);
 
     // sys_spawn(&task1);
     // sys_spawn(&task2);
-
-    // for (i = 0; i < 500; i++)
-    while (1)
-    {
-        sys_move_cursor(0, print_location);
-        printf("> [TASK] I am task with pid %d, I have acquired two mutex lock. (%d)", pid, i++);
-    }
+    if (pid == 2)
+        for (i = 0; i < 500; i++)
+        {
+            sys_move_cursor(0, print_location);
+            printf("> [TASK] I am task with pid %d, I have acquired two mutex lock. (%d)", pid, i++);
+        }
+    else 
+        while (1)
+        {
+            sys_move_cursor(0, print_location);
+            printf("> [TASK] I am task with pid %d, I have acquired two mutex lock. (%d)", pid, i++);
+        }
     sys_exit(); // test exit
 }
 
@@ -39,12 +44,12 @@ void wait_lock_task()
     int i, print_location = 1;
 
     sys_move_cursor(0, print_location);
-    printf("> [TASK] I want to acquire a mute lock from task(pid=2).");
+    printf("> [TASK] I want to acquire a mute lock from task(pid=%d).", pid);
 
     mutex_lock_acquire(&lock1);
 
     sys_move_cursor(0, print_location);
-    printf("> [TASK] I have acquired a mutex lock from task(pid=2).");
+    printf("> [TASK] I have acquired a mutex lock from task(pid=%d).", pid);
 
     sys_exit(); // test exit
 }
@@ -55,12 +60,12 @@ void wait_exit_task()
     int i, print_location = 2;
 
     sys_move_cursor(0, print_location);
-    printf("> [TASK] I want to wait task (pid=2) to exit.");
+    printf("> [TASK] I want to wait task (pid=%d) to exit.", pid);
 
     sys_waitpid(pid); //test waitpid
 
     sys_move_cursor(0, print_location);
-    printf("> [TASK] Task (pid=2) has exited.                ");
+    printf("> [TASK] Task (pid=%d) has exited.                ", pid);
 
     sys_exit(); // test exit
 }

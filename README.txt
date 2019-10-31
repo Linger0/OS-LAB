@@ -9,14 +9,14 @@ entry.S:
 	2.系统调用返回前CP0_EPC的值+4
 
 lock.h\lock.c: 
-	1.mutex_lock_t中添加了阻塞队列locked_queue, 每把锁拥有自己的阻塞队列
+	1.mutex_lock_t中添加了阻塞队列block_queue, 每把锁拥有自己的阻塞队列
 	2.lock_status同时作为锁当前允许的线程数，初始化时设为锁最大允许的线程数（Bonus）
-	3.每次释放锁会立即从locked_queue放出一个进程并使其获得锁
+	3.每次释放锁会立即从block_queue放出一个进程并使其获得锁
 	4.请求互斥锁只需检查一次锁的状态
 
 sched.h\sched.c:
 	1.pcb_t增加了唤起时间和优先级
-	2.scheduler: 	a.在调度前检查sleep的队列blocked_queue
+	2.scheduler: 	a.在调度前检查sleep的队列sleep_queue
 			b.重置当前进程的优先级
 			c.如果是时钟中断，调度后重置时间片
 	3.每次阻塞进程放出时立即增加将该进程的优先级
