@@ -10,18 +10,16 @@ void do_semaphore_init(semaphore_t *s, int val)
 
 void do_semaphore_up(semaphore_t *s)
 {
-	if (!queue_is_empty(&s->block_queue)) {
+	s->value++;
+	if (s->value <= 0) {
 		do_unblock_one(&s->block_queue);
-	} else {
-		s->value++;
 	}
 }
 
 void do_semaphore_down(semaphore_t *s)
 {
-	if (!s->value) {
+	s->value--;
+	if (s->value < 0) {
 		do_block(&s->block_queue);
-	} else {
-		s->value--;
 	}
 }

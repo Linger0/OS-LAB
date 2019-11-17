@@ -43,7 +43,7 @@ void SunQuan(void)
         sys_move_cursor(0, 0);
         printf("[SunQuan](%d): I'm coming to save you, LiuBei!", myPid);
 
-        sys_sleep(1);
+        sys_sleep(3);
         sys_spawn(&lb_task);
         mbox_send(pub, &myPid, sizeof(pid_t));
     }
@@ -80,7 +80,7 @@ void LiuBei(void)
         sys_move_cursor(0, 1);
         printf("[LiuBei](%d): I'm coming to save you, SunQuan!", myPid);
 
-        sys_sleep(1);
+        sys_sleep(3);
         sys_spawn(&sq_task);
         mbox_send(pub, &myPid, sizeof(pid_t));
     }

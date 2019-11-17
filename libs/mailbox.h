@@ -8,15 +8,15 @@
 
 typedef struct mailbox
 {
-    char *name;
-    int open;
-    char msg[MAX_LEN_MSG];
-    int len;
-    int si;
-    int ri;
-    condition_t send;
-    condition_t recv;
-    mutex_lock_t mutex;
+    char *name; // 信箱名(open与close使用)
+    int open;   // 引用数
+    char msg[MAX_LEN_MSG];  // 消息
+    int len;    // 当前有效消息长度
+    int si;     // send索引
+    int ri;     // recv索引
+    condition_t send;   // 信箱满时阻塞发送方
+    condition_t recv;   // 信箱空时阻塞接收方
+    mutex_lock_t mutex; // 信箱访问互斥
 } mailbox_t;
 
 

@@ -1,4 +1,34 @@
-﻿
+﻿=============================== Project 3 ===================================
+
+文件目录结构与修改说明:
+
+   |--include/os 
+   |   |--sched.h                     : PCB添加wait_pid、lock_queue、belong
+   |   |--barrier.h                   : barrier_t
+   |   |--cond.h                      : condition_t
+   |   |--sem.h                       : semaphore_t
+   |--kernel
+   |   |--locking
+   |   |   |--barrier.c               : barrier
+   |   |   |--cond.c                  : condition
+   |   |   |--sem.c                   : semaphore
+   |   |--sched
+   |   |   |--sched.c                 : do_exit()、do_kill()、do_spawn()、do_waitpid()
+   |   |   |--queue.c                 : 1. push、dequeue、remove添加对belong的赋值
+   |   |   |                            2. 添加lqueue_push、lqueue_dequeue函数(对PCB中锁队列lock_queue的操作)
+   |   |--syscall
+   |   |   |--syscall.c               : 封装系统调用
+   |--libs
+   |   |--mailbox.h                   : mailbox_t
+   |   |--mailbox.c                   : mailbox
+   |--test
+   |   |--test_shell.c                : shell
+   |--README.txt                      : 本文档
+
+
+
+========================== Project 1 & Project 2 =============================
+
 设计摘要:
 
 main.c:	1.init_pcb中分配了一块内核自己的PCB并使current_running指向它

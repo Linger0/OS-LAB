@@ -162,7 +162,7 @@ void test_shell()
                     printf("[EXEC] Process[%d].\n", n);
                     sys_spawn(test_tasks[n]);
                 }
-                else if (strcmp(Cmd, "kill") == (' ' - '\0')) {
+                else if (strcmp(Cmd, "kill") == (' ' - '\0')) { // kill
                     int pid = atoi(Cmd + 5);
                     if (pid == 1) printf("[ERROR] Can't kill shell.\n");
                     else {
@@ -170,11 +170,6 @@ void test_shell()
                         sys_kill(pid);
                     }
                 }
-                /* else if (strcmp(Cmd, "pid") == (' ' - '\0')) {
-                    int pid = atoi(Cmd + 4);
-                    printf("set pid = %d.\r", pid);
-                    process_id = pid;
-                } */
                 else { // other
                     printf("[ERROR] Unknown command.\n");
                 }

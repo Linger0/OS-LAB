@@ -29,7 +29,7 @@ void barrier_task1(void)
         sys_move_cursor(0, print_location);
         printf("> [TASK] Exited barrier (%d).           ", i);
 
-        sys_sleep(1);
+        sys_sleep(4);
     }
 }
 
@@ -54,7 +54,7 @@ void barrier_task2(void)
         sys_move_cursor(0, print_location);
         printf("> [TASK] Exited barrier (%d).           ", i);
 
-        sys_sleep(1);
+        sys_sleep(2);
     }
 }
 
