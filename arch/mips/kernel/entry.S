@@ -63,6 +63,7 @@ END(asm_start)
     sw      k0, OFFSET_CAUSE(k1)
     mfc0    k0, CP0_EPC
     sw      k0, OFFSET_EPC(k1)
+.set at
 .endm
 
 .macro RESTORE_CONTEXT offset
@@ -112,6 +113,7 @@ END(asm_start)
     mtc0    k0, CP0_CAUSE
     lw      k0, OFFSET_EPC(k1)
     mtc0    k0, CP0_EPC
+.set at
 .endm
 
 NESTED(do_scheduler, 0, ra)
@@ -121,8 +123,35 @@ NESTED(do_scheduler, 0, ra)
     jr      ra	
 END(do_scheduler)
 
+.global TLBexception_handler_begin
+.global TLBexception_handler_end
 .global exception_handler_begin
 .global exception_handler_end
+
+NESTED(TLBexception_handler_entry, 0, sp)
+.set noat
+TLBexception_handler_begin:
+	// TLB Refill
+    lw      k0, current_running
+    lw      k0, 320(k0)         // PTE1Base
+    mfc0    k1, CP0_ENTRYHI
+    srl     k1, k1, 22          
+    sll     k1, k1, 2           // VPN1 || 00
+    or      k1, k1, k0          // PTE1 = PTE1Base || VPN1 || 00
+    lw      k1, (k1)            // PGD
+    mfc0    k0, CP0_ENTRYHI
+    srl     k0, k0, 10
+    andi    k0, k0, 0xff8       // VPN2 || 00
+    or      k1, k1, k0          // PTE2 = PGD || VPN2 || 00
+    lw      k0, (k1)
+    lw      k1, 4(k1)
+    mtc0    k0, CP0_ENTRYLO0
+    mtc0    k1, CP0_ENTRYLO1
+    tlbwr
+    eret
+TLBexception_handler_end:
+.set at
+END(TLBexception_handler_entry)
 
 NESTED(exception_handler_entry, 0, sp)   
 exception_handler_begin:
@@ -134,8 +163,8 @@ exception_handler_begin:
     and     k1, k1, CAUSE_EXCCODE
     la      k0, exception_handler
     add     k0, k0, k1
-    lw      ra, (k0)
-    jr      ra
+    lw      k1, (k0)
+    jr      k1
 exception_handler_end:
 END(exception_handler_entry)
 
@@ -168,6 +197,17 @@ NESTED(handle_other, 0, sp)
     RESTORE_CONTEXT(USER)
     eret
 END(handle_other)
+
+NESTED(handle_TLBinvalid, 0, sp)
+    mfc0    a0, CP0_BADVADDR
+    addiu   sp, sp, -4
+    jal     do_TLBinvalid
+    addiu   sp, sp, 4
+    tlbp
+    tlbwi
+    RESTORE_CONTEXT(USER)
+    eret
+END(handle_TLBinvalid)
 
 LEAF(new_proc_run)
     // New process start here.
@@ -204,3 +244,13 @@ LEAF(set_cp0_compare)
     mtc0    a0, CP0_COMPARE
     jr      ra
 END(set_cp0_compare)
+
+LEAF(set_cp0_entrylo)
+    // set CP0_ENTRYLO
+    lw      k0, (a0)
+    lw      k1, 4(a0)
+    mtc0    k0, CP0_ENTRYLO0
+    mtc0    k1, CP0_ENTRYLO1
+
+    jr      ra 
+END(set_cp0_entrylo)

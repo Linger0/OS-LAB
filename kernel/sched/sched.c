@@ -5,6 +5,7 @@
 #include "sched.h"
 #include "queue.h"
 #include "screen.h"
+#include "mm.h"
 
 pcb_t pcb[NUM_MAX_TASK];
 
@@ -41,7 +42,6 @@ void scheduler(void)
 {	
 	// Modify the current_running pointer.
 
-	// pcb_t *_item;
 	if (current_running->status == TASK_RUNNING) {
 		current_running->status = TASK_READY;
 		queue_push(&ready_queue, current_running);
@@ -50,26 +50,12 @@ void scheduler(void)
 	current_running->cursor_x = screen_cursor_x;
 	current_running->cursor_y = screen_cursor_y;
 
-	/* // 重置priority
-	if (current_running->priority)
-		current_running->priority = initial_priority; */
-
-	/* // 调用优先级最大的进程, 在相同优先级下满足先进先出
-	current_running = ready_queue.head;
-	for (_item = ready_queue.head; _item; _item = _item->next)
-		if (_item->priority > current_running->priority)
-			current_running = _item;
-	queue_remove(&ready_queue, current_running); */
 	current_running = queue_dequeue(&ready_queue);
 	if (current_running->status == TASK_EXITED) do_exit(); // 处理僵尸进程
 	current_running->status = TASK_RUNNING;
 
 	screen_cursor_x = current_running->cursor_x;
 	screen_cursor_y = current_running->cursor_y;
-
-	/* // 增加未调用进程的 priority
-	for (_item = ready_queue.head; _item; _item = _item->next) 
-		if (_item->priority) _item->priority++; */
 
 	if (rst_timer) {
 		get_ticks(); // 更新 time_elapsed
@@ -117,7 +103,7 @@ void do_unblock_all(queue_t *queue)
 
 void do_spawn(task_info_t *task) 
 {
-	int i;
+	int i, k;
 	for (i = 0; i < NUM_MAX_TASK && pcb[i].status != TASK_EXITED; i++);
 	if (i == NUM_MAX_TASK) return;
 
@@ -131,6 +117,12 @@ void do_spawn(task_info_t *task)
 	pcb[i].kernel_context.cp0_status =
 	pcb[i].user_context.cp0_status = initial_cp0_status;
 	pcb[i].user_context.cp0_epc = task->entry_point;
+
+	// 初始化一级页表
+	pte1_t *pte1 = (pte1_t *)pcb[i].pte1_base;
+	for (k = 0; k < 1024; k++) {
+		pte1[k] = initial_pte1;
+	}
 	queue_push(&ready_queue, &pcb[i]);
 }
 

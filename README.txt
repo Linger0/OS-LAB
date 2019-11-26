@@ -1,27 +1,64 @@
-﻿=============================== Project 3 ===================================
+﻿
+=============================== Project 4 ===================================
+
+设计摘要: 
+
+（1）采用二级页表，虚拟地址结构如下:
+     --------------------
+     |31-22|21-12|11-0  |
+     --------------------
+     |VPN1 |VPN2 |OFFSET|
+     --------------------
+
+（2）页表分配在地址空间内核段，一级页表: 0xa0101000-0xa0111000
+                               二级页表: 0xa0111000-0xa0200000
+     页框基址: 0x01000000
+
+（3）一级页表在系统启动时分配并初始化，与PCB绑定
+     二级页表按需调用
+
 
 文件目录结构与修改说明:
 
-   |--include/os 
+   |--arch/mips/kernel/
+   |   |--entry.S                     : TLB Refill、TLB Invalid例外处理
+   |--include/os/  
+   |   |--sched.h                     : PCB添加pte1_base
+   |   |--mm.h                        : 页表项数据类型、内存管理相关函数与宏定义
+   |--init/
+   |   |--main.c                      : 初始化内存管理
+   |--kernel/mm/
+   |   |--mm.c                        : 内存管理
+   |--test
+   |   |--test_shell.c                : shell
+   |--README.txt                      : 本文档
+
+
+
+=============================== Project 3 ===================================
+
+文件目录结构与修改说明:
+
+   |--include/os/ 
    |   |--sched.h                     : PCB添加wait_pid、lock_queue、belong
    |   |--barrier.h                   : barrier_t
    |   |--cond.h                      : condition_t
    |   |--sem.h                       : semaphore_t
-   |--kernel
-   |   |--locking
+   |--kernel/
+   |   |--locking/
    |   |   |--barrier.c               : barrier
    |   |   |--cond.c                  : condition
    |   |   |--sem.c                   : semaphore
-   |   |--sched
+   |   |--sched/
    |   |   |--sched.c                 : do_exit()、do_kill()、do_spawn()、do_waitpid()
    |   |   |--queue.c                 : 1. push、dequeue、remove添加对belong的赋值
    |   |   |                            2. 添加lqueue_push、lqueue_dequeue函数(对PCB中锁队列lock_queue的操作)
-   |   |--syscall
+   |   |--syscall/
    |   |   |--syscall.c               : 封装系统调用
-   |--libs
+   |--libs/
    |   |--mailbox.h                   : mailbox_t
    |   |--mailbox.c                   : mailbox
-   |--test
+   |--test/
    |   |--test_shell.c                : shell
    |--README.txt                      : 本文档
 
@@ -58,22 +95,22 @@ lock_task2.c: 测试Bonus，详细说明见设计文档
 
 修改的文件目录结构:
 
-   |--arch/mips
+   |--arch/mips/
    |   |--boot/bootblock.S            : 拷贝实验1的bootblock
-   |   |--kernel
+   |   |--kernel/
    |   |   |--entry.S                 : 完成异常处理(中断、系统调用)以及用于C语言调用的汇编函数 
    |   |   |--syscall.S               : 完成invoke_syscall()
-   |--drivers
+   |--drivers/
    |   |--screen.c                    : init_screen()中添加screen_clear()
-   |--include/os 
+   |--include/os/
    |   |--lock.h                      : 完成mutex_lock_t定义
    |   |--sched.h                     : 完善pcb_t定义
-   |--init
+   |--init/
    |   |--main.c                      : 完成init_pcb
    |--kernel/
    |   |--irq/irq.c                   : 完成中断判断interrupt_helper()和始终中断irq_timer()
    |   |--locking/lock.c              : 完成互斥锁的初始化、请求和释放
-   |   |--sched
+   |   |--sched/
    |   |   |--sched.c                 : 完成scheduler、do_block与do_unblock_one, 其中修改了do_unblock_one的返回值为int
    |   |   |--time.c                  : get_tick()中更新time_elapsed
    |   |--syscall/syscall.c           : 去掉“syscall[fn](arg1, arg2, arg3)”前的注释

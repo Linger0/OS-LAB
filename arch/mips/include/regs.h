@@ -140,6 +140,7 @@
 #define OFFSET_PC           152
 /* Size of stack frame, word/double word alignment */
 #define OFFSET_SIZE         156
+
 /*
  * Copyright (C) 1994, 1995, 1996, 1997, 2000, 2001 by Ralf Baechle
  *

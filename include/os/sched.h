@@ -34,8 +34,8 @@
 
 #define NUM_MAX_TASK 16
 
-#define STACK_BASE 0xa0effffc
-#define STACK_SIZE 4096
+#define STACK_BASE 0xa0f00000
+#define STACK_SIZE 0x1000
 
 /* used to save register infomation */
 typedef struct regs_context
@@ -81,14 +81,14 @@ typedef struct pcb
     uint32_t kernel_stack_top; /* 位置不能动 */ /* 不能清除 */
     uint32_t user_stack_top;
 
+    /* page table */
+    uint32_t pte1_base; /* 位置不能动 */
+
     /* wakeup time */
     uint32_t wakeup_time;
 
     /* wait pid */
     pid_t wait_pid;
-
-    /* priority */
-    // uint32_t priority;
 
 /* 下面的必须初始化 */
     /* process id */
@@ -137,7 +137,6 @@ extern pid_t process_id;
 
 extern pcb_t pcb[NUM_MAX_TASK];
 extern uint32_t initial_cp0_status;
-// extern uint32_t initial_priority;
 
 void new_proc_run(void);
 

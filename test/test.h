@@ -26,9 +26,10 @@
 #ifndef INCLUDE_TEST_H_
 #define INCLUDE_TEST_H_
 
-#include "test3.h"
+#include "test4.h"
+#include "sched.h"
 
-#define CMD_LEN 10
+#define CMD_LEN 60
 
 void test_shell(void);
 

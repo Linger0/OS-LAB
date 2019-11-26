@@ -52,7 +52,7 @@ enum ExcCode
 };
 
 #define ExcCode 0x7c
-#define IP 0xff00
+#define IPL 0xff00
 
 /* BEV = 0 */
 // Exception Enter Vector
@@ -79,6 +79,11 @@ void set_cp0_compare(uint32_t);
 extern void exception_handler_entry(void);
 extern void exception_handler_begin(void);
 extern void exception_handler_end(void);
+
+/* TLBexception handler entery */
+extern void TLBexception_handler_entry(void);
+extern void TLBexception_handler_begin(void);
+extern void TLBexception_handler_end(void);
 
 extern void handle_int(void);
 extern void handle_syscall(void);
