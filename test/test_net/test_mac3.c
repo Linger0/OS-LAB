@@ -27,10 +27,42 @@ void clear_interrupt()
 
 static void mac_send_desc_init(mac_t *mac)
 {
+    int i;
+    send_desc = (desc_t *)TXDES_BASE_ADDR;
+    for (i = 0; i < PNUM; i++) {
+        send_desc[i].tdes0 = 0;
+        send_desc[i].tdes1 = (1 << 30) | (1 << 29) | (1 << 24) | BYTE_CNT;
+        send_desc[i].tdes2 = SEND_PHY_ADDR + i * BYTE_CNT;
+        send_desc[i].tdes3 = V2P((uint32_t)&send_desc[i + 1]);
+        memcpy((uint8_t *)P2V(send_desc[i].tdes2), (uint8_t *)buffer, BYTE_CNT);
+    }
+    send_desc[PNUM - 1].tdes1 = (1 << 30) | (1 << 29) | (1 << 25) | (1 << 24) | BYTE_CNT;
+    send_desc[PNUM - 1].tdes3 = V2P((uint32_t)send_desc);
+
+    mac->td = (uint32_t)send_desc;
+    mac->td_phy = V2P((uint32_t)send_desc);
+    mac->saddr = P2V(SEND_PHY_ADDR);
+    mac->saddr_phy = SEND_PHY_ADDR;
 }
 
 static void mac_recv_desc_init(mac_t *mac)
 {
+    int i;
+    receive_desc = (desc_t *)RXDES_BASE_ADDR;
+    for (i = 0; i < PNUM; i++) {
+        receive_desc[i].tdes0 = 0;
+        receive_desc[i].tdes1 = (1 << 31) | (1 << 24) | BYTE_CNT;
+        receive_desc[i].tdes2 = RECV_PHY_ADDR + i * BYTE_CNT;
+        receive_desc[i].tdes3 = V2P((uint32_t)&receive_desc[i + 1]);
+        bzero((void *)P2V(receive_desc[i].tdes2), BYTE_CNT);
+    }
+    receive_desc[PNUM - 1].tdes1 = (1 << 25) | (1 << 24) | BYTE_CNT;
+    receive_desc[PNUM - 1].tdes3 = V2P((uint32_t)receive_desc);
+
+    mac->rd = (uint32_t)receive_desc;
+    mac->rd_phy = V2P((uint32_t)receive_desc);
+    mac->daddr = P2V(RECV_PHY_ADDR);
+    mac->daddr_phy = RECV_PHY_ADDR;
 }
 
 static void mii_dul_force(mac_t *mac)
@@ -67,11 +99,11 @@ void mac_send_task()
     mac_send_desc_init(&test_mac);
 
     dma_control_init(&test_mac, DmaStoreAndForward | DmaTxSecondFrame | DmaRxThreshCtrl128);
-    clear_interrupt(&test_mac);
+    clear_interrupt();
 
     mii_dul_force(&test_mac);
 
-    register_irq_handler(LS1C_MAC_IRQ, mac_irq_handle);
+    // register_irq_handler(LS1C_MAC_IRQ, mac_irq_handle);
 
     irq_enable(LS1C_MAC_IRQ);
     sys_move_cursor(1, print_location);
@@ -106,7 +138,7 @@ void mac_recv_task()
     mac_recv_desc_init(&test_mac);
 
     dma_control_init(&test_mac, DmaStoreAndForward | DmaTxSecondFrame | DmaRxThreshCtrl128);
-    clear_interrupt(&test_mac);
+    clear_interrupt();
 
     mii_dul_force(&test_mac);
 

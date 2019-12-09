@@ -47,7 +47,7 @@ void print_tx_dscrb(mac_t *mac)
     printf("send buffer mac->saddr=0x%x ", mac->saddr);
     printf("mac->saddr_phy=0x%x ", mac->saddr_phy);
     printf("send discrb mac->td_phy=0x%x\n", mac->td_phy);
-#if 1
+#if 0
     desc_t *send=mac->td;
     for(i=0;i<1/*mac->pnum*/;i++)
     {
@@ -79,40 +79,54 @@ void print_rx_dscrb(mac_t *mac)
 
 static uint32_t printf_recv_buffer(uint32_t recv_buffer)
 {
+    int i;
+    uint32_t *recv = (uint32_t *)recv_buffer;
+    for (i = 0; i < PSIZE; i++) {
+        printf("%x ", recv[i]);
+    }
+    return 1;
 }
 void mac_irq_handle(void)
 {
+    clear_interrupt();
+    while (ch_flag < PNUM) {
+        if ((receive_desc[ch_flag].tdes0 & 0x80000000) == 0x80000000) return; // 当前描述符受DMA控制
+        // recv_flag[ch_flag] = 1;
+        ch_flag++;
+    }
+    if (!queue_is_empty(&recv_block_queue)) {   // 收到64个数据包后释放线程
+        do_unblock_one(&recv_block_queue);
+    }
 }
 
 void irq_enable(int IRQn)
 {
+    IRQn = IRQn - 32;
+    uint32_t int1_en_data = read_register(Int1_EN, 0);
+    int1_en_data |= (1 << IRQn);
+    reg_write_32(Int1_EN, int1_en_data);
 }
 
 void mac_recv_handle(mac_t *test_mac)
 {
+    int i;
     desc_t *recv_desc = (desc_t *)test_mac->rd;
-    while (ch_flag < PNUM) {
-        if ((recv_desc[ch_flag].tdes0 & 0x80000000) == 0x80000000) {
-            sys_wait_recv_package();
-        }
-        else {
-            recv_flag[ch_flag] = 1;
+    for (i = 0; i < PNUM; i++) {
+        sys_move_cursor(1, 4);
+        printf("%d recv buffer, r_desc( 0x%x) =0x%x:                \n", i, &recv_desc[i], recv_desc[i].tdes0);
+        if (!(recv_desc[i].tdes0 & 0x4000f8cf)) { // 当前数据包没有错误
             mac_cnt++;
-            sys_move_cursor(1, 4);
-            printf("%d recv buffer, r_desc( 0x%x) =0x%x:                \n", 
-                    ch_flag, &recv_desc[ch_flag], recv_desc[ch_flag].tdes0);
-            printf_recv_buffer(daddr + i * BYTE_CNT);   // print data
-            }
+            printf_recv_buffer(test_mac->daddr + i * BYTE_CNT);   // 打印数据包
         }
     }
     sys_move_cursor(1, 3);
-    printf("recv valid %d packages!              \n", valid);
+    printf("recv valid %d packages!:              ", mac_cnt);
 }
 
 static uint32_t printk_recv_buffer(uint32_t recv_buffer)
 {
-    uint32_t *recv = (uint32_t *)recv_buffer;
     int i;
+    uint32_t *recv = (uint32_t *)recv_buffer;
     for (i = 0; i < PSIZE; i++) {
         printk("%x ", recv[i]);
     }
@@ -231,11 +245,13 @@ void do_init_mac(void)
     s_reset(&test_mac);
     disable_interrupt_all(&test_mac);
     set_mac_addr(&test_mac);
+
+    reg_write_32(0xbfd01064, 0xffffffff);
+    reg_write_32(0xbfd01068, 0xffffffff);
+    reg_write_32(0xbfd0106c, 0x0);
 }
 
 void do_wait_recv_package(void)
 {
-    current_running->status = TASK_BLOCKED;
-    queue_push(&recv_block_queue, current_running);
-    do_scheduler();
+    do_block(&recv_block_queue);
 }

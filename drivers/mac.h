@@ -4,7 +4,11 @@
 #include "type.h"
 #include "queue.h"
 #include "syscall.h"
-#define TEST_REGS1
+
+#define P2V(a) ((a) | 0xa0000000)
+#define V2P(a) ((a) & 0x1fffffff)
+
+//#define TEST_REGS1
 //#define TEST_REGS2
 //#define TEST_REGS3
 #define GMAC_BASE_ADDR (0xbfe10000)
@@ -18,6 +22,8 @@
 
 #define TXDES_BASE_ADDR (0xa0200000)
 #define RXDES_BASE_ADDR (0xa0300000)
+
+#define LS1C_MAC_IRQ 35
 
 extern queue_t recv_block_queue;
 extern uint32_t recv_flag[PNUM];
@@ -45,6 +51,11 @@ enum DmaControlReg
 enum InitialRegisters
 {
     DmaIntDisable = 0,
+};
+enum IntRegisters
+{
+    Int1_SR = 0xbfd01058,
+    Int1_EN = 0xbfd0105c,
 };
 typedef struct desc
 {
@@ -74,6 +85,9 @@ typedef struct mac
 
 } mac_t;
 
+extern desc_t *send_desc;
+extern desc_t *receive_desc;
+
 uint32_t read_register(uint32_t base, uint32_t offset);
 void reg_write_32(uint32_t addr, uint32_t data);
 
@@ -85,4 +99,6 @@ void do_init_mac(void);
 void do_wait_recv_package(void);
 void mac_irq_handle(void);
 void mac_recv_handle(mac_t *test_mac);
+
+void clear_interrupt(void);
 #endif

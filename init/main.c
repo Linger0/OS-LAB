@@ -35,7 +35,7 @@
 // #include "mm.h"
 #include "mac.h"
 
-uint32_t initial_cp0_status = 0x30008003;
+uint32_t initial_cp0_status = 0x3000fc03;
 
 void (*exception_handler[32])();
 int (*syscall[NUM_SYSCALLS])();
