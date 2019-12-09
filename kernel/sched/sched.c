@@ -5,7 +5,7 @@
 #include "sched.h"
 #include "queue.h"
 #include "screen.h"
-#include "mm.h"
+// #include "mm.h"
 
 pcb_t pcb[NUM_MAX_TASK];
 
@@ -61,9 +61,16 @@ void scheduler(void)
 		get_ticks(); // 更新 time_elapsed
 		reset_cp0_count(); 
 		set_cp0_compare(TIMER_INTERVAL); // 重置时间片
-		rst_timer = 0;
+		rst_timer = 0; 
 		if (!queue_is_empty(&sleep_queue)) check_sleeping(); // check sleeping
-	}
+	} 
+
+/*	// 设置ASID
+	uint32_t cp0_entryhi = get_cp0_entryhi();
+	cp0_entryhi &= ~0xfff;
+	cp0_entryhi |= current_running->pid;
+	set_cp0_entryhi(cp0_entryhi);
+*/
 }
 
 void do_sleep(uint32_t sleep_time)
@@ -118,11 +125,12 @@ void do_spawn(task_info_t *task)
 	pcb[i].user_context.cp0_status = initial_cp0_status;
 	pcb[i].user_context.cp0_epc = task->entry_point;
 
-	// 初始化一级页表
-	pte1_t *pte1 = (pte1_t *)pcb[i].pte1_base;
+/*	// 初始化页目录
+	pde_t *pde = (pde_t *)pcb[i].pde_base;
 	for (k = 0; k < 1024; k++) {
-		pte1[k] = initial_pte1;
+		pde[k] = initial_pde;
 	}
+*/
 	queue_push(&ready_queue, &pcb[i]);
 }
 
@@ -174,7 +182,7 @@ void do_waitpid(pid_t pid)
 	do_scheduler();
 }
 
-void do_getpid(pid_t *pid)
+int do_getpid(void)
 {
-	*pid = current_running->pid;
+	return current_running->pid;
 }

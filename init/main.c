@@ -32,29 +32,30 @@
 #include "common.h"
 #include "syscall.h"
 #include "mailbox.h"
-#include "mm.h"
+// #include "mm.h"
+#include "mac.h"
 
 uint32_t initial_cp0_status = 0x30008003;
 
 void (*exception_handler[32])();
 int (*syscall[NUM_SYSCALLS])();
-
+/*
 static void init_memory()
 {
-	// 初始化一级页表
-	init_page_table(); 	
-	//init_swap();		// only used in P4 bonus: Page swap mechanism
+	init_page_table(); 	// 初始化页目录与一页页表
+	init_swap();
+	//init_TLB();
 }
-
+*/
 static void init_pcb()
 {
 	int i;
 	for (i = 0; i < NUM_MAX_TASK; i++) {
 		pcb[i].pid = 0;
 		pcb[i].status = TASK_EXITED;
-		pcb[i].kernel_stack_top = STACK_BASE + (i + 1) * STACK_SIZE - 4;
-		pcb[i].user_stack_top = 0x7FFFFFFC - i * STACK_SIZE;
-		pcb[i].pte1_base = PAGE_TABLE_BASE + (i + 1) * PAGE_TABLE_SIZE;
+		pcb[i].kernel_stack_top = STACK_BASE - 4 + (2 * i + 1) * STACK_SIZE;
+		pcb[i].user_stack_top = STACK_BASE - 4 + (2 * i + 2) * STACK_SIZE;
+		// pcb[i].pde_base = PGDIR_BASE + (i + 1) * PAGE_SIZE;
 	}
 	queue_init(&ready_queue);
 	queue_init(&sleep_queue);
@@ -82,8 +83,8 @@ static void init_exception_handler()
 	for (i = 0; i < 32; i++) {
 		exception_handler[i] = (void (*)())handle_other;
 	}
-	exception_handler[TLBL] = (void (*)())handle_TLBinvalid;
-	exception_handler[TLBS] = (void (*)())handle_TLBinvalid;
+	// exception_handler[TLBL] = (void (*)())handle_TLBinvalid;
+	// exception_handler[TLBS] = (void (*)())handle_TLBinvalid;
 	exception_handler[INT] = (void (*)())handle_int;
 	exception_handler[SYS] = (void (*)())handle_syscall;
 }
@@ -99,11 +100,11 @@ static void init_exception()
 	memcpy(	(uint8_t *)(BEV0_EBASE + BEV0_OFFSET), 
 		(uint8_t *)exception_handler_entry, 
 		(uint32_t)(exception_handler_end - exception_handler_begin) );
-
+/*
 	memcpy(	(uint8_t *)BEV0_EBASE, 
 		(uint8_t *)TLBexception_handler_entry, 
 		(uint32_t)(TLBexception_handler_end - TLBexception_handler_begin) );
-		
+*/	
 	reset_cp0_count(); set_cp0_compare(TIMER_INTERVAL);
 }
 
@@ -115,10 +116,11 @@ static void init_syscall(void)
 	syscall[SYSCALL_UNBLOCK_ONE] = (int (*)())do_unblock_one;
 	syscall[SYSCALL_UNBLOCK_ALL] = (int (*)())do_unblock_all;
 	syscall[SYSCALL_WRITE] = (int (*)())screen_write;
-/* 	syscall[SYSCALL_READ] = (int (*)()) ;		*/
+// 	syscall[SYSCALL_READ] = (int (*)()) ;		
 	syscall[SYSCALL_CURSOR] = (int (*)())screen_move_cursor;
 	syscall[SYSCALL_REFLUSH] = (int (*)())screen_reflush;
 	syscall[SYSCALL_CLEAR] = (int (*)())screen_clear;
+	syscall[SYSCALL_GETPID] = (int (*)())do_getpid;
 	syscall[SYSCALL_MUTEX_LOCK_INIT] = (int (*)())do_mutex_lock_init;
 	syscall[SYSCALL_MUTEX_LOCK_ACQUIRE] = (int (*)())do_mutex_lock_acquire;
 	syscall[SYSCALL_MUTEX_LOCK_RELEASE] = (int (*)())do_mutex_lock_release;
@@ -126,7 +128,7 @@ static void init_syscall(void)
 	syscall[SYSCALL_EXIT] = (int (*)())do_exit;
 	syscall[SYSCALL_KILL] = (int (*)())do_kill;
 	syscall[SYSCALL_WAIT] = (int (*)())do_waitpid;
-/*	syscall[SYSCALL_SEMAPHORE_INIT] = (int (*)())do_semaphore_init;
+	syscall[SYSCALL_SEMAPHORE_INIT] = (int (*)())do_semaphore_init;
 	syscall[SYSCALL_SEMAPHORE_UP] = (int (*)())do_semaphore_up;
 	syscall[SYSCALL_SEMAPHORE_DOWN] = (int (*)())do_semaphore_down;
 	syscall[SYSCALL_CONDITION_INIT] = (int (*)())do_condition_init;
@@ -134,7 +136,11 @@ static void init_syscall(void)
 	syscall[SYSCALL_CONDITION_SIGNAL] = (int (*)())do_condition_signal;
 	syscall[SYSCALL_CONDITION_BROADCAST] = (int (*)())do_condition_broadcast;
 	syscall[SYSCALL_BARRIER_INIT] = (int (*)())do_barrier_init;
-	syscall[SYSCALL_BARRIER_WAIT] = (int (*)())do_barrier_wait; */
+	syscall[SYSCALL_BARRIER_WAIT] = (int (*)())do_barrier_wait;
+	syscall[SYSCALL_INIT_MAC] = (int (*)())do_init_mac;
+	syscall[SYSCALL_NET_SEND] = (int (*)())do_net_send;
+	syscall[SYSCALL_NET_RECV] = (int (*)())do_net_recv;
+	syscall[SYSCALL_WAIT_RECV_PACKAGE] = (int (*)())do_wait_recv_package;
 }
 
 // jump from bootloader.
@@ -148,11 +154,11 @@ void __attribute__((section(".entry_function"))) _start(void)
 	// init interrupt (^_^)
 	init_exception();
 	printk("> [INIT] Interrupt processing initialization succeeded.\n");
-
+/*
 	// init virtual memory
 	init_memory();
 	printk("> [INIT] Virtual memory initialization succeeded.\n");
-
+*/
 	// init system call table (0_0)
 	init_syscall();
 	printk("> [INIT] System call initialized successfully.\n");

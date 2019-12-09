@@ -26,7 +26,7 @@
 #ifndef INCLUDE_TEST_H_
 #define INCLUDE_TEST_H_
 
-#include "test4.h"
+#include "./test_net/test4.h"
 #include "sched.h"
 
 #define CMD_LEN 60

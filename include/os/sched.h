@@ -82,7 +82,7 @@ typedef struct pcb
     uint32_t user_stack_top;
 
     /* page table */
-    uint32_t pte1_base; /* 位置不能动 */
+    // uint32_t pde_base; /* 位置不能动 */
 
     /* wakeup time */
     uint32_t wakeup_time;
@@ -144,6 +144,8 @@ void do_spawn(task_info_t *);
 void do_kill(pid_t);
 void do_exit(void);
 void do_waitpid(pid_t);
+
+int do_getpid(void);
 
 void do_scheduler(void);
 void do_sleep(uint32_t);

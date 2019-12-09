@@ -67,7 +67,7 @@ int atoi(char *str) {
     }
     return i;
 }
-
+/*
 unsigned long htoi(char *str) {
     unsigned long i = 0;
     while (*str >= '0' && *str <= '9' || *str >= 'a' && *str <= 'f') {
@@ -76,14 +76,15 @@ unsigned long htoi(char *str) {
     }
     return i;
 }
+*/
+// test_net
+struct task_info task1 = {"task1", (uint32_t)&mac_init_task, USER_PROCESS};
+struct task_info task2 = {"task2", (uint32_t)&mac_send_task, USER_PROCESS};
+struct task_info task3 = {"task3", (uint32_t)&mac_recv_task, USER_PROCESS};
 
-//Running project_4 from shell is recommended. You can also run it from loadboot.
-struct task_info task1 = {"task1", (uint32_t)&drawing_task1, USER_PROCESS};
-struct task_info task2 = {"task2", (uint32_t)&rw_task1, USER_PROCESS};
+static struct task_info *test_tasks[3] = {&task1, &task2, &task3};
 
-static struct task_info *test_tasks[2] = {&task1, &task2};
-
-static int num_test_tasks = 2;
+static int num_test_tasks = 3;
 
 // Shell
 static char split_line[] = "------------------- COMMAND -------------------";
@@ -150,7 +151,7 @@ void test_shell()
                 }
                 else if (strcmp(Cmd, "exec") == (' ' - '\0')) { // exec
                     int n = atoi(Cmd + 5);
-                    unsigned long *ap = a;
+                    /* unsigned long *ap = a;
                     char *x;
                     for (x = Cmd + 5; *x; x++) {
                         if (*x == 'x') {
@@ -158,20 +159,24 @@ void test_shell()
                             ap++;
                         }
                     }
-                    printf("%x, %x\n", a[0], a[1]);
-                    printf("[EXEC] Process[%d].\n", n);
+                    */
+                    printf("EXEC: Process[%d].\n", n);
                     sys_spawn(test_tasks[n]);
                 }
                 else if (strcmp(Cmd, "kill") == (' ' - '\0')) { // kill
                     int pid = atoi(Cmd + 5);
-                    if (pid == 1) printf("[ERROR] Can't kill shell.\n");
+                    if (pid == 1) printf("ERROR: Can't kill shell.\n");
                     else {
-                        printf("[KILL] Process pid=%d.\n", pid);
+                        printf("KILL: Process pid=%d.\n", pid);
                         sys_kill(pid);
                     }
                 }
+                else if (!strcmp(Cmd, "getpid")) { // getpid
+                    int pid = sys_getpid();
+                    printf("Shell pid=%d.\n", pid);
+                }
                 else { // other
-                    printf("[ERROR] Unknown command.\n");
+                    printf("ERROR: Command not found.\n");
                 }
             }
             printf(root);

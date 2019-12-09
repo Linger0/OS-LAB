@@ -49,14 +49,16 @@
 #define SYSCALL_REFLUSH 23
 #define SYSCALL_CLEAR 24
 
-#define SYSCALL_MUTEX_LOCK_INIT 30
-#define SYSCALL_MUTEX_LOCK_ACQUIRE 31
-#define SYSCALL_MUTEX_LOCK_RELEASE 32
-
 #define SYSCALL_SPAWN 25
 #define SYSCALL_KILL 26
 #define SYSCALL_EXIT 27
 #define SYSCALL_WAIT 28
+
+#define SYSCALL_GETPID 29
+
+#define SYSCALL_MUTEX_LOCK_INIT 30
+#define SYSCALL_MUTEX_LOCK_ACQUIRE 31
+#define SYSCALL_MUTEX_LOCK_RELEASE 32
 
 #define SYSCALL_SEMAPHORE_INIT 35
 #define SYSCALL_SEMAPHORE_UP 36
@@ -69,6 +71,11 @@
 
 #define SYSCALL_BARRIER_INIT 45
 #define SYSCALL_BARRIER_WAIT 46
+
+#define SYSCALL_INIT_MAC 50
+#define SYSCALL_NET_SEND 51
+#define SYSCALL_NET_RECV 52
+#define SYSCALL_WAIT_RECV_PACKAGE 53
 
 /* syscall function pointer */
 int (*syscall[NUM_SYSCALLS])();
@@ -96,6 +103,8 @@ void sys_kill(pid_t);
 void sys_exit(void);
 void sys_waitpid(pid_t);
 
+int sys_getpid(void);
+
 void semaphore_init(semaphore_t *, int);
 void semaphore_up(semaphore_t *);
 void semaphore_down(semaphore_t *);
@@ -108,6 +117,9 @@ void condition_broadcast(condition_t *);
 void barrier_init(barrier_t *, int);
 void barrier_wait(barrier_t *);
 
-int sys_getpid(void);
+void sys_init_mac(void);
+void sys_net_send(uint32_t, uint32_t);
+uint32_t sys_net_recv(uint32_t, uint32_t, uint32_t);
+void sys_wait_recv_package(void);
 
 #endif

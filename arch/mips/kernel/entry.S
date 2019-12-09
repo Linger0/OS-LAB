@@ -123,26 +123,26 @@ NESTED(do_scheduler, 0, ra)
     jr      ra	
 END(do_scheduler)
 
-.global TLBexception_handler_begin
-.global TLBexception_handler_end
+# .global TLBexception_handler_begin
+# .global TLBexception_handler_end
 .global exception_handler_begin
 .global exception_handler_end
-
+/*
 NESTED(TLBexception_handler_entry, 0, sp)
 .set noat
 TLBexception_handler_begin:
 	// TLB Refill
     lw      k0, current_running
-    lw      k0, 320(k0)         // PTE1Base
+    lw      k0, 320(k0)         // PDEBase
     mfc0    k1, CP0_ENTRYHI
     srl     k1, k1, 22          
-    sll     k1, k1, 2           // VPN1 || 00
-    or      k1, k1, k0          // PTE1 = PTE1Base || VPN1 || 00
-    lw      k1, (k1)            // PGD
+    sll     k1, k1, 2           // PDN || 00
+    or      k1, k1, k0          // PDE = PDEBase || PDN || 00
+    lw      k1, (k1)            // PTEBASE
     mfc0    k0, CP0_ENTRYHI
     srl     k0, k0, 10
-    andi    k0, k0, 0xff8       // VPN2 || 00
-    or      k1, k1, k0          // PTE2 = PGD || VPN2 || 00
+    andi    k0, k0, 0xff8       // PTN || 00
+    or      k1, k1, k0          // PTE = PTEBASE || PTN || 00
     lw      k0, (k1)
     lw      k1, 4(k1)
     mtc0    k0, CP0_ENTRYLO0
@@ -152,7 +152,7 @@ TLBexception_handler_begin:
 TLBexception_handler_end:
 .set at
 END(TLBexception_handler_entry)
-
+*/
 NESTED(exception_handler_entry, 0, sp)   
 exception_handler_begin:
     // Leve2 exception Handler.
@@ -197,7 +197,7 @@ NESTED(handle_other, 0, sp)
     RESTORE_CONTEXT(USER)
     eret
 END(handle_other)
-
+/*
 NESTED(handle_TLBinvalid, 0, sp)
     mfc0    a0, CP0_BADVADDR
     addiu   sp, sp, -4
@@ -208,7 +208,7 @@ NESTED(handle_TLBinvalid, 0, sp)
     RESTORE_CONTEXT(USER)
     eret
 END(handle_TLBinvalid)
-
+*/
 LEAF(new_proc_run)
     // New process start here.
     RESTORE_CONTEXT(USER)
@@ -244,9 +244,10 @@ LEAF(set_cp0_compare)
     mtc0    a0, CP0_COMPARE
     jr      ra
 END(set_cp0_compare)
-
+/*
 LEAF(set_cp0_entrylo)
     // set CP0_ENTRYLO
+    and     a0, ~0x7
     lw      k0, (a0)
     lw      k1, 4(a0)
     mtc0    k0, CP0_ENTRYLO0
@@ -254,3 +255,47 @@ LEAF(set_cp0_entrylo)
 
     jr      ra 
 END(set_cp0_entrylo)
+
+LEAF(get_cp0_entryhi)
+    mfc0    v0, CP0_ENTRYHI
+    jr      ra
+END(get_cp0_entryhi)
+
+LEAF(set_cp0_entryhi)
+    mtc0    a0, CP0_ENTRYHI
+    jr      ra
+END(set_cp0_entryhi)
+
+LEAF(clear_TLBe)
+    mfc0    t2, CP0_ENTRYHI
+    
+    mtc0    a0, CP0_ENTRYHI
+    tlbp    
+    mfc0    t0, CP0_INDEX
+    srl     t0, t0, 31
+    bnez    t0, No_TLBe
+
+    mtc0    zero, CP0_ENTRYHI
+    mtc0    zero, CP0_ENTRYLO0
+    mtc0    zero, CP0_ENTRYLO1
+    tlbwi
+    
+No_TLBe:
+    mtc0    t2, CP0_ENTRYHI
+    jr      ra
+END(clear_TLBe)
+
+LEAF(init_TLB)
+    li      t1, 32
+LOOP:
+    sub     t1, t1, 1
+    mtc0    zero, CP0_ENTRYHI
+    mtc0    zero, CP0_ENTRYLO0
+    mtc0    zero, CP0_ENTRYLO1
+    mtc0    t1, CP0_INDEX
+    tlbwi
+    bnez    t1, LOOP
+
+    jr      ra
+END(init_TLB)
+*/

@@ -6,7 +6,7 @@
 
 void system_call_helper(int fn, int arg1, int arg2, int arg3)
 {
-    syscall[fn](arg1, arg2, arg3);
+    (current_running->user_context).regs[2] = syscall[fn](arg1, arg2, arg3);
 }
 
 void sys_sleep(uint32_t time)
@@ -131,5 +131,25 @@ void barrier_wait(barrier_t *barrier)
 
 int sys_getpid(void)
 {
-    return current_running->pid;
+    return invoke_syscall(SYSCALL_GETPID, IGNORE, IGNORE, IGNORE);
+}
+
+void sys_init_mac(void)
+{
+    invoke_syscall(SYSCALL_INIT_MAC, IGNORE, IGNORE, IGNORE);
+}
+
+void sys_net_send(uint32_t td, uint32_t td_phy)
+{
+    invoke_syscall(SYSCALL_NET_SEND, (int)td, (int)td_phy, IGNORE);
+}
+
+uint32_t sys_net_recv(uint32_t rd, uint32_t rd_phy, uint32_t daddr)
+{
+    return (uint32_t)invoke_syscall(SYSCALL_NET_RECV, (int)rd, (int)rd_phy, (int)daddr);
+}
+
+void sys_wait_recv_package(void)
+{
+    invoke_syscall(SYSCALL_WAIT_RECV_PACKAGE, IGNORE, IGNORE, IGNORE);
 }

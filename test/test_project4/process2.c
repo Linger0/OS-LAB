@@ -52,7 +52,7 @@ void rw_task1()
 	for(i = 0; i < RW_TIMES; i++)
 	{
 		mem1 = a[i];
-		memory[i] = mem2 = rand();
+		memory[i] = mem2 = rand()+i;
 		*(int *)mem1 = mem2;
 		printf("> Write: 0x%x, %d\n", mem1, mem2);
 	}
@@ -65,6 +65,7 @@ void rw_task1()
 		else
 			printf("> Read error: %d\n", memory[i+RW_TIMES]);
 	}
-	sys_exit();
+	while(1);
+	//sys_exit();
 	//Input address from argv.
 }
