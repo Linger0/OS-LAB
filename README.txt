@@ -1,4 +1,13 @@
 ﻿
+=============================== Project 5 ===================================
+
+   |--drivers/
+   |   |--mac.h                       : 包含描述符、buffer基址宏定义
+   |   |--mac.c                       : mac_irq_handle()、mac_recv_handle()、do_net_recv()、do_net_send() 
+   |--test/test_net/
+   |   |--test_mac3.c                 : 初始化描述符函数
+   |--README.txt                      : 本文档
+
 =============================== Project 4 ===================================
 
 设计摘要: 

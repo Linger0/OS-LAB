@@ -6,7 +6,7 @@
 // #define NUM_DMA_DESC 48
 queue_t recv_block_queue;
 uint32_t recv_flag[PNUM] = {0};
-uint32_t ch_flag;
+uint32_t ch_flag = 0;
 uint32_t mac_cnt = 0;
 uint32_t reg_read_32(uint32_t addr)
 {
@@ -89,10 +89,16 @@ static uint32_t printf_recv_buffer(uint32_t recv_buffer)
 void mac_irq_handle(void)
 {
     clear_interrupt();
-    while (ch_flag < PNUM) {
+    while (mac_cnt < PNUM) {
         if ((receive_desc[ch_flag].tdes0 & 0x80000000) == 0x80000000) return; // 当前描述符受DMA控制
-        // recv_flag[ch_flag] = 1;
-        ch_flag++;
+        uint32_t *buffer = (uint32_t *)P2V(receive_desc[ch_flag].tdes2);
+        if (*buffer == 0xb57b5500) {
+            mac_cnt++;
+        } else {    // 覆盖操作系统的包
+            receive_desc[ch_flag].tdes0 = 0x80000000;
+            reg_write_32(DMA_BASE_ADDR + 0x8, 1);
+        }
+        ch_flag = (ch_flag + 1) & (PNUM - 1);
     }
     if (!queue_is_empty(&recv_block_queue)) {   // 收到64个数据包后释放线程
         do_unblock_one(&recv_block_queue);
@@ -110,17 +116,20 @@ void irq_enable(int IRQn)
 void mac_recv_handle(mac_t *test_mac)
 {
     int i;
+    uint32_t valid = 0;
     desc_t *recv_desc = (desc_t *)test_mac->rd;
-    for (i = 0; i < PNUM; i++) {
+    for (i = 0; i < PNUM; i++) {    
+        sys_move_cursor(1, 3);
+        printf("recv valid %d packages!:                ", valid);
         sys_move_cursor(1, 4);
         printf("%d recv buffer, r_desc( 0x%x) =0x%x:                \n", i, &recv_desc[i], recv_desc[i].tdes0);
-        if (!(recv_desc[i].tdes0 & 0x4000f8cf)) { // 当前数据包没有错误
-            mac_cnt++;
+        if (!(recv_desc[i].tdes0 & 0xf8cf)) { // 当前数据包没有错误
+            valid++;
             printf_recv_buffer(test_mac->daddr + i * BYTE_CNT);   // 打印数据包
         }
     }
     sys_move_cursor(1, 3);
-    printf("recv valid %d packages!:              ", mac_cnt);
+    printf("recv valid %d packages!:              ", valid);
 }
 
 static uint32_t printk_recv_buffer(uint32_t recv_buffer)

@@ -51,7 +51,7 @@ static void mac_recv_desc_init(mac_t *mac)
     receive_desc = (desc_t *)RXDES_BASE_ADDR;
     for (i = 0; i < PNUM; i++) {
         receive_desc[i].tdes0 = 0;
-        receive_desc[i].tdes1 = (1 << 31) | (1 << 24) | BYTE_CNT;
+        receive_desc[i].tdes1 = /*(1 << 31) |*/ (1 << 24) | BYTE_CNT;
         receive_desc[i].tdes2 = RECV_PHY_ADDR + i * BYTE_CNT;
         receive_desc[i].tdes3 = V2P((uint32_t)&receive_desc[i + 1]);
         bzero((void *)P2V(receive_desc[i].tdes2), BYTE_CNT);
@@ -163,6 +163,8 @@ void mac_recv_task()
         printf("> [MAC RECV TASK] waiting receive package.\n");
         sys_wait_recv_package();
     }
+    sys_move_cursor(1, print_location);
+    printf("> [MAC RECV TASK] print receive buffer.         ");
     mac_recv_handle(&test_mac);
 
     sys_exit();
