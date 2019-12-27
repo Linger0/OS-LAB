@@ -43,39 +43,53 @@
 #define SYSCALL_UNBLOCK_ONE 11
 #define SYSCALL_UNBLOCK_ALL 12
 
-#define SYSCALL_WRITE 20
-#define SYSCALL_READ 21
-#define SYSCALL_CURSOR 22
-#define SYSCALL_REFLUSH 23
-#define SYSCALL_CLEAR 24
+#define SYSCALL_WRITE 15
+#define SYSCALL_READ 16
+#define SYSCALL_CURSOR 17
+#define SYSCALL_REFLUSH 18
+#define SYSCALL_CLEAR 19
 
-#define SYSCALL_SPAWN 25
-#define SYSCALL_KILL 26
-#define SYSCALL_EXIT 27
-#define SYSCALL_WAIT 28
+#define SYSCALL_SPAWN 20
+#define SYSCALL_KILL 21
+#define SYSCALL_EXIT 22
+#define SYSCALL_WAIT 23
 
-#define SYSCALL_GETPID 29
+#define SYSCALL_GETPID 24
 
-#define SYSCALL_MUTEX_LOCK_INIT 30
-#define SYSCALL_MUTEX_LOCK_ACQUIRE 31
-#define SYSCALL_MUTEX_LOCK_RELEASE 32
+#define SYSCALL_MUTEX_LOCK_INIT 25
+#define SYSCALL_MUTEX_LOCK_ACQUIRE 26
+#define SYSCALL_MUTEX_LOCK_RELEASE 27
 
-#define SYSCALL_SEMAPHORE_INIT 35
-#define SYSCALL_SEMAPHORE_UP 36
-#define SYSCALL_SEMAPHORE_DOWN 37
+#define SYSCALL_SEMAPHORE_INIT 28
+#define SYSCALL_SEMAPHORE_UP 29
+#define SYSCALL_SEMAPHORE_DOWN 30
 
-#define SYSCALL_CONDITION_INIT 40
-#define SYSCALL_CONDITION_WAIT 41
-#define SYSCALL_CONDITION_SIGNAL 42
-#define SYSCALL_CONDITION_BROADCAST 43
+#define SYSCALL_CONDITION_INIT 31
+#define SYSCALL_CONDITION_WAIT 32
+#define SYSCALL_CONDITION_SIGNAL 33
+#define SYSCALL_CONDITION_BROADCAST 34
 
-#define SYSCALL_BARRIER_INIT 45
-#define SYSCALL_BARRIER_WAIT 46
+#define SYSCALL_BARRIER_INIT 35
+#define SYSCALL_BARRIER_WAIT 36
 
-#define SYSCALL_INIT_MAC 50
-#define SYSCALL_NET_SEND 51
-#define SYSCALL_NET_RECV 52
-#define SYSCALL_WAIT_RECV_PACKAGE 53
+#define SYSCALL_INIT_MAC 40
+#define SYSCALL_NET_SEND 41
+#define SYSCALL_NET_RECV 42
+#define SYSCALL_WAIT_RECV_PACKAGE 43
+
+#define SYSCALL_MKFS 45
+#define SYSCALL_MKDIR 46 
+#define SYSCALL_RMDIR 47
+#define SYSCALL_READ_DIR 48
+#define SYSCALL_FS_INFO 49
+#define SYSCALL_ENTER_FS 50
+
+#define SYSCALL_MKNOD 51
+#define SYSCALL_CAT 52
+#define SYSCALL_FOPEN 53
+#define SYSCALL_FREAD 54
+#define SYSCALL_FWRITE 55
+#define SYSCALL_FCLOSE 56
 
 /* syscall function pointer */
 int (*syscall[NUM_SYSCALLS])();
@@ -121,5 +135,19 @@ void sys_init_mac(void);
 void sys_net_send(uint32_t, uint32_t);
 uint32_t sys_net_recv(uint32_t, uint32_t, uint32_t);
 void sys_wait_recv_package(void);
+
+void sys_mkfs();
+void sys_mkdir(char *);
+void sys_rmdir(char *);
+void sys_read_dir(char *);
+void sys_fs_info();
+void sys_enter_fs(char *);
+
+void sys_mknod();
+void sys_cat();
+int sys_fopen(char *name, uint32_t rw);
+void sys_fread(int fd, char *buff, int cnt);
+void sys_fwrite(int fd, char *data, int cnt);
+void sys_close(int fd);
 
 #endif

@@ -165,8 +165,11 @@ void mac_recv_task()
     }
     sys_move_cursor(1, print_location);
     printf("> [MAC RECV TASK] print receive buffer.         ");
-    mac_recv_handle(&test_mac);
-
+    while (1) {
+        mac_recv_handle(&test_mac);
+        sys_net_recv(test_mac.rd, test_mac.rd_phy, test_mac.daddr);
+        sys_wait_recv_package();
+    }
     sys_exit();
 }
 

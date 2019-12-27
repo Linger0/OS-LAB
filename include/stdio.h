@@ -7,4 +7,6 @@ int printk(const char *fmt, ...);
 /* user printk */
 int printf(const char *fmt, ...);
 
+int printkn(const char *fmt, ...);
+
 #endif

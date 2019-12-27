@@ -13,7 +13,7 @@ char old_screen[SCREEN_HEIGHT * SCREEN_WIDTH] = {0};
 void vt100_move_cursor(int x, int y)
 {
     // \033[y;xH
-    printk("%c[%d;%dH", 27, y, x);
+    printk("%c[%d;%dH", 27, y + 1, x + 1);
 }
 
 /* clear screen */
@@ -57,6 +57,7 @@ static void screen_scroll(int line1, int line2)
             }
         }
     }
+    // screen_reflush();
 }
 
 /* write a char */
@@ -176,7 +177,7 @@ void screen_reflush(void)
                 // | |            |
                 // |    ---->x    |
                 // ----------------
-                vt100_move_cursor(j + 1, i + 1);
+                vt100_move_cursor(j, i);
                 port_write_ch(new_screen[i * SCREEN_WIDTH + j]);
                 old_screen[i * SCREEN_WIDTH + j] = new_screen[i * SCREEN_WIDTH + j];
             }

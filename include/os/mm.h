@@ -9,6 +9,7 @@
  * 0x0000000..0x0010000: Exception entry *
  * 0x0010000..0x0110000: PMON code       *
  * 0x0200000..0x0300000: Page table      *
+ * 0x0300000..0x0400000: MAC Description *
  * 0x0800000..0x0900000: Kernel          *
  * 0x0f00000..0x1000000: Kernel Stack    *
  * 0x1000000..0x2000000: User space      *
@@ -17,7 +18,7 @@
 #define PTABLE_BASE 0xa0211000
 #define PTABLE_MEM_STOP 0xa0300000
 #define PAGE_PHYBASE 0x01000000
-#define PAGE_PHYSTOP 0x02000000
+#define PAGE_PHYSTOP 0x01100000
 #define PAGE_SIZE 0x1000
 
 /* --------- VA ---------

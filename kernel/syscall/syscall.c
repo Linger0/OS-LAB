@@ -153,3 +153,33 @@ void sys_wait_recv_package(void)
 {
     invoke_syscall(SYSCALL_WAIT_RECV_PACKAGE, IGNORE, IGNORE, IGNORE);
 }
+
+void sys_mkfs(void)
+{
+    invoke_syscall(SYSCALL_MKFS, IGNORE, IGNORE, IGNORE);
+}
+
+void sys_fs_info(void)
+{
+    invoke_syscall(SYSCALL_FS_INFO, IGNORE, IGNORE, IGNORE);
+}
+
+void sys_mkdir(char *name)
+{
+    invoke_syscall(SYSCALL_MKDIR, (int)name, IGNORE, IGNORE);
+}
+
+void sys_rmdir(char *name)
+{
+    invoke_syscall(SYSCALL_RMDIR, (int)name, IGNORE, IGNORE);
+}
+
+void sys_read_dir(char *name)
+{
+    invoke_syscall(SYSCALL_READ_DIR, (int)name, IGNORE, IGNORE);
+}
+
+void sys_enter_fs(char *name)
+{
+    invoke_syscall(SYSCALL_ENTER_FS, (int)name, IGNORE, IGNORE);
+}

@@ -31,6 +31,7 @@
 
 #include "type.h"
 #include "queue.h"
+#include "fs.h"
 
 #define NUM_MAX_TASK 16
 
@@ -89,6 +90,9 @@ typedef struct pcb
 
     /* wait pid */
     pid_t wait_pid;
+
+    /* current working directory */
+    uint32_t cwd; /* ino */
 
 /* 下面的必须初始化 */
     /* process id */

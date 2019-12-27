@@ -218,6 +218,22 @@ int printk(const char *fmt, ...)
 	return ret;
 }
 
+int printkn(const char *fmt, ...)
+{
+	int ret;
+	va_list va;
+	char buff[256];
+
+	va_start(va, fmt);
+	ret = mini_vsnprintf(buff, 256, fmt, va);
+	va_end(va);
+
+	buff[ret] = '\0';
+	port_write(buff);
+	screen_write(buff);
+	return ret;
+}
+
 int printf(const char *fmt, ...)
 {
 	int ret;

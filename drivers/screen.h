@@ -33,7 +33,7 @@ extern int screen_cursor_y;
 #define SCREEN_WIDTH  80
 #define SCREEN_HEIGHT 30
 
-#define SPLIT_LOC 16
+#define SPLIT_LOC 0
 
 void vt100_move_cursor(int, int);
 

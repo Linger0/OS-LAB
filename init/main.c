@@ -34,6 +34,7 @@
 #include "mailbox.h"
 // #include "mm.h"
 #include "mac.h"
+#include "fs.h"
 
 uint32_t initial_cp0_status = 0x3000fc03;
 
@@ -71,6 +72,7 @@ static void init_pcb()
 	pcb[0].kernel_context.cp0_status =
 	pcb[0].user_context.cp0_status = initial_cp0_status;
 	pcb[0].user_context.cp0_epc = (uint32_t)test_shell;
+	pcb[0].cwd = 0;
 	queue_push(&ready_queue, &pcb[0]);
 
 	// for first schedule
@@ -137,10 +139,22 @@ static void init_syscall(void)
 	syscall[SYSCALL_CONDITION_BROADCAST] = (int (*)())do_condition_broadcast;
 	syscall[SYSCALL_BARRIER_INIT] = (int (*)())do_barrier_init;
 	syscall[SYSCALL_BARRIER_WAIT] = (int (*)())do_barrier_wait;
-	syscall[SYSCALL_INIT_MAC] = (int (*)())do_init_mac;
+/*	syscall[SYSCALL_INIT_MAC] = (int (*)())do_init_mac;
 	syscall[SYSCALL_NET_SEND] = (int (*)())do_net_send;
 	syscall[SYSCALL_NET_RECV] = (int (*)())do_net_recv;
-	syscall[SYSCALL_WAIT_RECV_PACKAGE] = (int (*)())do_wait_recv_package;
+	syscall[SYSCALL_WAIT_RECV_PACKAGE] = (int (*)())do_wait_recv_package;*/
+	syscall[SYSCALL_MKFS] = (int (*)())do_mkfs;
+	syscall[SYSCALL_MKDIR] = (int (*)())do_mkdir;
+	syscall[SYSCALL_RMDIR] = (int (*)())do_rmdir;
+	syscall[SYSCALL_READ_DIR] = (int (*)())do_read_dir;
+	syscall[SYSCALL_FS_INFO] = (int (*)())do_fs_info;
+	syscall[SYSCALL_ENTER_FS] = (int (*)())do_enter_fs;
+/*	syscall[SYSCALL_MKNOD] = (int (*)());
+	syscall[SYSCALL_CAT] = (int (*)());
+	syscall[SYSCALL_FOPEN] = (int (*)());
+	syscall[SYSCALL_FREAD] = (int (*)());
+	syscall[SYSCALL_FWRITE] = (int (*)());
+	syscall[SYSCALL_FCLOSE] = (int (*)());*/
 }
 
 // jump from bootloader.
@@ -169,8 +183,21 @@ void __attribute__((section(".entry_function"))) _start(void)
 
 	// init screen (QAQ)
 	init_screen();
-	// printk("> [INIT] SCREEN initialization succeeded.\n");
+	printk("\n> [INIT] SCREEN initialization succeeded.\n");
 
+	// init Filesystem
+	init_fs();
+
+/*
+	char sb[1024];
+	sb[2] = 3;
+	printk("%d ", sb[2]);
+	sdwrite(sb, FS_ADDR, 1024);
+	sb[2] = 0;
+	sdread(sb, FS_ADDR, 512);
+	printk("%d ", sb[2]);
+	while (1);
+*/
 	// Enable interrupt
 	uint32_t cp0_status = get_cp0_status();
 	cp0_status |= 0x1;

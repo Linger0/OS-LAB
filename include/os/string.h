@@ -40,7 +40,7 @@ int strcmp(char *str1, char *str2);
 
 void strcpy(char *dest, char *src);
 
-char *strcat(char *dest, char *src);
+// char *strcat(char *dest, char *src);
 
 int strlen(char *src);
 

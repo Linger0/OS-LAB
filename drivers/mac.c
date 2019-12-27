@@ -92,7 +92,7 @@ void mac_irq_handle(void)
     while (mac_cnt < PNUM) {
         if ((receive_desc[ch_flag].tdes0 & 0x80000000) == 0x80000000) return; // 当前描述符受DMA控制
         uint32_t *buffer = (uint32_t *)P2V(receive_desc[ch_flag].tdes2);
-        if (*buffer == 0xb57b5500) {
+        if (*buffer == 0xb57b5500 && (*(buffer + 1) & 0xffff) == 0xf77d) {
             mac_cnt++;
         } else {    // 覆盖操作系统的包
             receive_desc[ch_flag].tdes0 = 0x80000000;
@@ -100,6 +100,7 @@ void mac_irq_handle(void)
         }
         ch_flag = (ch_flag + 1) & (PNUM - 1);
     }
+    mac_cnt = 0;
     if (!queue_is_empty(&recv_block_queue)) {   // 收到64个数据包后释放线程
         do_unblock_one(&recv_block_queue);
     }
@@ -116,7 +117,7 @@ void irq_enable(int IRQn)
 void mac_recv_handle(mac_t *test_mac)
 {
     int i;
-    uint32_t valid = 0;
+    static uint32_t valid = 0;
     desc_t *recv_desc = (desc_t *)test_mac->rd;
     for (i = 0; i < PNUM; i++) {    
         sys_move_cursor(1, 3);

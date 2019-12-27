@@ -31,6 +31,7 @@
 #include "syscall.h"
 #include "sched.h"
 #include "irq.h"
+#include "fs.h"
 
 static void disable_interrupt()
 {
@@ -78,17 +79,16 @@ unsigned long htoi(char *str) {
 }
 */
 // test_net
-struct task_info task1 = {"task1", (uint32_t)&mac_init_task, USER_PROCESS};
-struct task_info task2 = {"task2", (uint32_t)&mac_send_task, USER_PROCESS};
-struct task_info task3 = {"task3", (uint32_t)&mac_recv_task, USER_PROCESS};
+struct task_info task1 = {"task1", (uint32_t)&test_fs, USER_PROCESS};
 
-static struct task_info *test_tasks[3] = {&task1, &task2, &task3};
+static struct task_info *test_tasks[1] = {&task1};
 
-static int num_test_tasks = 3;
+static int num_test_tasks = 1;
 
 // Shell
 static char split_line[] = "------------------- COMMAND -------------------";
-static char root[] = "> Linger@myOS: ";
+static char root[] = "> Linger@myOS:";
+char cwd_path[DIR_LEVEL * (FNAME_LEN + 1)] = "/";
 
 static char *status_str[4] = {
     "TASK_BLOCKED",
@@ -107,6 +107,8 @@ void test_shell()
 
     sys_move_cursor(0, SPLIT_LOC + 1);
     printf(root);
+    printf(cwd_path);
+    printf("$ ");
 
     while (1)
     {
@@ -151,15 +153,6 @@ void test_shell()
                 }
                 else if (strcmp(Cmd, "exec") == (' ' - '\0')) { // exec
                     int n = atoi(Cmd + 5);
-                    /* unsigned long *ap = a;
-                    char *x;
-                    for (x = Cmd + 5; *x; x++) {
-                        if (*x == 'x') {
-                            *ap = htoi(++x);
-                            ap++;
-                        }
-                    }
-                    */
                     printf("EXEC: Process[%d].\n", n);
                     sys_spawn(test_tasks[n]);
                 }
@@ -171,6 +164,24 @@ void test_shell()
                         sys_kill(pid);
                     }
                 }
+                else if (!strcmp(Cmd, "mkfs")) {
+                    sys_mkfs();
+                }
+                else if (!strcmp(Cmd, "statfs")) {
+                    sys_fs_info();
+                }
+                else if (strcmp(Cmd, "mkdir") == (' ') - '\0') {
+                    sys_mkdir(Cmd + 6);
+                }
+                else if (strcmp(Cmd, "rmdir") == (' ') - '\0') {
+                    sys_rmdir(Cmd + 6);
+                }
+                else if (strcmp(Cmd, "cd") == (' ') - '\0') {
+                    sys_enter_fs(Cmd + 3);
+                }
+                else if (strcmp(Cmd, "ls") == (' ') - '\0') {
+                    sys_read_dir(Cmd + 3);
+                }
                 else if (!strcmp(Cmd, "getpid")) { // getpid
                     int pid = sys_getpid();
                     printf("Shell pid=%d.\n", pid);
@@ -180,6 +191,8 @@ void test_shell()
                 }
             }
             printf(root);
+            printf(cwd_path);
+            printf("$ ");
             index = 0;
         }
     }
