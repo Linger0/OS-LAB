@@ -143,11 +143,11 @@ void sys_read_dir(char *);
 void sys_fs_info();
 void sys_enter_fs(char *);
 
-void sys_mknod();
-void sys_cat();
-int sys_fopen(char *name, uint32_t rw);
-void sys_fread(int fd, char *buff, int cnt);
-void sys_fwrite(int fd, char *data, int cnt);
-void sys_close(int fd);
+void sys_mknod(char *);
+void sys_cat(char *);
+int sys_fopen(char *, uint32_t);
+int sys_fread(int, char *, int);
+int sys_fwrite(int, char *, int);
+void sys_fclose(int);
 
 #endif

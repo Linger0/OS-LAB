@@ -56,6 +56,7 @@ static void init_pcb()
 		pcb[i].status = TASK_EXITED;
 		pcb[i].kernel_stack_top = STACK_BASE - 4 + (2 * i + 1) * STACK_SIZE;
 		pcb[i].user_stack_top = STACK_BASE - 4 + (2 * i + 2) * STACK_SIZE;
+		pcb[0].cwd = 0;
 		// pcb[i].pde_base = PGDIR_BASE + (i + 1) * PAGE_SIZE;
 	}
 	queue_init(&ready_queue);
@@ -72,7 +73,6 @@ static void init_pcb()
 	pcb[0].kernel_context.cp0_status =
 	pcb[0].user_context.cp0_status = initial_cp0_status;
 	pcb[0].user_context.cp0_epc = (uint32_t)test_shell;
-	pcb[0].cwd = 0;
 	queue_push(&ready_queue, &pcb[0]);
 
 	// for first schedule
@@ -149,12 +149,12 @@ static void init_syscall(void)
 	syscall[SYSCALL_READ_DIR] = (int (*)())do_read_dir;
 	syscall[SYSCALL_FS_INFO] = (int (*)())do_fs_info;
 	syscall[SYSCALL_ENTER_FS] = (int (*)())do_enter_fs;
-/*	syscall[SYSCALL_MKNOD] = (int (*)());
-	syscall[SYSCALL_CAT] = (int (*)());
-	syscall[SYSCALL_FOPEN] = (int (*)());
-	syscall[SYSCALL_FREAD] = (int (*)());
-	syscall[SYSCALL_FWRITE] = (int (*)());
-	syscall[SYSCALL_FCLOSE] = (int (*)());*/
+	syscall[SYSCALL_MKNOD] = (int (*)())do_mknod;
+	syscall[SYSCALL_CAT] = (int (*)())do_cat;
+	syscall[SYSCALL_FOPEN] = (int (*)())do_fopen;
+	syscall[SYSCALL_FREAD] = (int (*)())do_fread;
+	syscall[SYSCALL_FWRITE] = (int (*)())do_fwrite;
+	syscall[SYSCALL_FCLOSE] = (int (*)())do_fclose;
 }
 
 // jump from bootloader.
@@ -168,9 +168,9 @@ void __attribute__((section(".entry_function"))) _start(void)
 	// init interrupt (^_^)
 	init_exception();
 	printk("> [INIT] Interrupt processing initialization succeeded.\n");
-/*
+
 	// init virtual memory
-	init_memory();
+/*	init_memory();
 	printk("> [INIT] Virtual memory initialization succeeded.\n");
 */
 	// init system call table (0_0)
@@ -183,21 +183,11 @@ void __attribute__((section(".entry_function"))) _start(void)
 
 	// init screen (QAQ)
 	init_screen();
-	printk("\n> [INIT] SCREEN initialization succeeded.\n");
+	printk("> [INIT] SCREEN initialization succeeded.\n");
 
 	// init Filesystem
 	init_fs();
 
-/*
-	char sb[1024];
-	sb[2] = 3;
-	printk("%d ", sb[2]);
-	sdwrite(sb, FS_ADDR, 1024);
-	sb[2] = 0;
-	sdread(sb, FS_ADDR, 512);
-	printk("%d ", sb[2]);
-	while (1);
-*/
 	// Enable interrupt
 	uint32_t cp0_status = get_cp0_status();
 	cp0_status |= 0x1;

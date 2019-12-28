@@ -12,6 +12,8 @@
  * |       |SuperBlock|InodeMap|Reserve|BlockMap|Inode|Block| *
  * ---------------------------------------------------------- *
  * |sectors|     1    |    1   |   2   |   64   | 512 | 2^21| *
+ * |   size|    512B  |  512B  |  1KB  |  32KB  |256KB| 1GB | *
+ * ---------------------------------------------------------- *
  * | nOfsec|     1    |  4096  |       |  4096  |  8  | .125| *
  * |   size|   512B   |  1bit  |       |  1bit  | 64B | 4KB | *
  * ---------------------------------------------------------- */
@@ -39,25 +41,25 @@ enum FileTypes
 
 typedef struct superblock
 {
-    uint32_t sectors;      // fs size
-    uint32_t inode_num;
-    uint32_t block_num;
-    uint32_t inode_addr;
-    uint32_t block_addr;
-    uint32_t magic;
+    uint32_t sectors;       // 文件系统占据的扇区数
+    uint32_t inode_num;     // inode 最大个数
+    uint32_t block_num;     // 数据块最大个数
+    uint32_t inode_addr;    // inode 在磁盘的起始地址
+    uint32_t block_addr;    // 数据块在磁盘的起始地址
+    uint32_t magic;         // 魔数
 } superblock_t;
 
 typedef struct inode
 {
     uint32_t type : 16;    // mode: 文件类型
-    uint32_t w : 1;        //       write
-    uint32_t r : 1;        //       read
-    uint32_t reference;          // 硬链接
+    uint32_t w : 1;        //       write 权限
+    uint32_t r : 1;        //       read 权限
+    uint32_t reference;          // 硬链接数
     uint32_t ctime;              // 创建时间
     uint32_t mtime;              // 最近修改时间
     uint32_t size;               // 文件大小
     uint32_t block[I_BLOCK_NUM]; // 数据块表
-    uint32_t btable;             // 一级间接索引表
+    uint32_t chunk_table;        // 一级间接索引表
 } inode_t; /* (6 + 10) * 4B = 64B */
 
 typedef struct dentry
@@ -69,9 +71,10 @@ typedef struct dentry
 typedef struct filedesc
 {
     uint32_t ino;
-    uint32_t available;
-    uint32_t r_position;
-    uint32_t w_position;
+    uint32_t wr : 1;    // 请求权限
+    uint32_t rd : 1;
+    uint32_t r_offset;  // 读指针
+    uint32_t w_offset;  // 写指针
 } fdesc_t;
 
 extern char cwd_path[DIR_LEVEL * (FNAME_LEN + 1)];
@@ -84,5 +87,12 @@ void do_mkdir(char *);
 void do_rmdir(char *);
 void do_read_dir(char *);
 void do_enter_fs(char *);
+
+void do_mknod(char *);
+void do_cat(char *);
+int do_fopen(char *, uint32_t);
+int do_fread(int, char *, int);
+int do_fwrite(int, char *, int);
+void do_fclose(int);
 
 #endif

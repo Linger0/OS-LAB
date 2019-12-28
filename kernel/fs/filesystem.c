@@ -13,12 +13,14 @@ uint32_t block_addr;
 
 static void mysdread(char *buff, uint32_t offset, uint32_t size)
 {
-	memcpy(buff, (char *)(offset + 0xa1000000 - FS_ADDR), size);
+	// memcpy(buff, (char *)(offset + 0xa1000000 - FS_ADDR), size);
+	sdread(buff, offset, size);
 }
 
 static void mysdwrite(char *buff, uint32_t offset, uint32_t size)
 {
-	memcpy((char *)(offset + 0xa1000000 - FS_ADDR), buff, size);
+	// memcpy((char *)(offset + 0xa1000000 - FS_ADDR), buff, size);
+	sdwrite(buff, offset, size);
 }
 
 static uint32_t bit_read(uint32_t *start, uint32_t offset)
@@ -67,9 +69,14 @@ static int translate_path(char *path_str, char path_array[DIR_LEVEL][FNAME_LEN])
 void init_fs()
 {
 	superblock_t *sb = (superblock_t *)FS_BUFF;
+	bzero(fdesc_table, FDESC_NUM * sizeof(fdesc_t));	// 描述符
 	mysdread((char *)sb, FS_ADDR, 512);
 	if (sb->magic == MAGIC) {
-		printk("[INIT] Filesystem existed. Magic : 0x%x\n", MAGIC);
+		imap_addr = FS_ADDR + I2A(1);
+		bmap_addr = FS_ADDR + I2A(4);
+		inode_addr = sb->inode_addr;
+		block_addr = sb->block_addr;
+		printk("> [INIT] Filesystem existed. Magic : 0x%x\n", MAGIC);
 	} else {
 		screen_cursor_y = 1;
 		do_mkfs();
@@ -180,6 +187,7 @@ void do_fs_info()
 void do_mkdir(char *dirname)
 {
 	if (*dirname == '\0') return;
+	vt100_move_cursor(screen_cursor_x, screen_cursor_y);
 
 	int level, index;
 	uint32_t ino, bno;
@@ -232,7 +240,7 @@ void do_mkdir(char *dirname)
 		if (!bit_read(imap, i)) {
 			dir[denum].ino = ino = i;
 			bit_write(imap, i, 1);
-			mysdwrite((char *)imap, imap_addr, 512);
+			mysdwrite((char *)imap, imap_addr, 512);	// imap
 			break;
 		}
 	}
@@ -268,6 +276,8 @@ void do_mkdir(char *dirname)
 
 void do_rmdir(char *dirname)
 {
+	vt100_move_cursor(screen_cursor_x, screen_cursor_y);
+
 	int level, index;
 	uint32_t ino, bno;
 	uint32_t denum;
@@ -312,8 +322,8 @@ void do_rmdir(char *dirname)
 		if (!strcmp(dir[i].fname, path[level - 1])) break;
 	}
 	cino = dir[i].ino;
-	strcpy(dir[i].fname, dir[denum].fname);
-	dir[i].ino = dir[denum].ino;
+	strcpy(dir[i].fname, dir[denum - 1].fname);
+	dir[i].ino = dir[denum - 1].ino;
 	mysdwrite((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);	// 父目录
 	inode[INO2I(ino)].size -= sizeof(dentry_t);
 	inode[INO2I(ino)].reference--;
@@ -341,9 +351,57 @@ void do_rmdir(char *dirname)
 
 void do_read_dir(char *dirname)
 {
+	if (*dirname == '\0') return;
 	vt100_move_cursor(screen_cursor_x, screen_cursor_y);
 
+	int level, index;
+	int denum;
+	uint32_t ino, bno;
+	inode_t *inode = (void *)FS_BUFF;
+	dentry_t *dir = (void *)(FS_BUFF + 512);
+	char path[DIR_LEVEL][FNAME_LEN];
+	level = translate_path(dirname, path);
+	// 找目录
+	if (path[0][0] == '\0') {
+		ino = 0;
+		mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+		bno = 0;
+		index = 1;
+	} else {
+		ino = current_running->cwd;
+		mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+		bno = inode[INO2I(ino)].block[0];
+		index = 0;
+	}
+	mysdread((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);
+	while (index < level) {
+		int i;
+		denum = inode[INO2I(ino)].size / sizeof(dentry_t);
+		for (i = 0; i < denum; i++) {
+			if (!strcmp(dir[i].fname, path[index])) {
+				ino = dir[i].ino;
+				mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+				bno = inode[INO2I(ino)].block[0];
+				mysdread((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);
+				index++; break;
+			}
+		}
+		if (i == denum) { printkn("%s: No such directory.\n", path[index]); return; }
+	}
+	if (inode[INO2I(ino)].type != DIRECTORY) { printkn("%s is not a directory.\n", path[level - 1]); return; }
+	// 输出
+	int i;
+	denum = inode[INO2I(ino)].size / sizeof(dentry_t);
+	for (i = 0; i < denum; i++) {
+		printkn("%s ", dir[i].fname);
+	}
+	printkn("\n");
+}
+
+void do_enter_fs(char *dirname)
+{
 	if (*dirname == '\0') return;
+	vt100_move_cursor(screen_cursor_x, screen_cursor_y);
 
 	int level, index;
 	int denum;
@@ -379,47 +437,221 @@ void do_read_dir(char *dirname)
 		}
 		if (i == denum) { printkn("%s: No such directory\n", path[index]); return; }
 	}
-	// 输出
+	// 进入目录
+	if (inode[INO2I(ino)].type != DIRECTORY) { printkn("%s is not a directory\n", path[level - 1]); return;}
+	current_running->cwd = ino;
+	int n = strlen(cwd_path);
+	if (!strcmp(dirname, "..")) {
+		for (n-- ; n > 0; n--) {
+			if (cwd_path[n] == '/') {
+				cwd_path[n] = '\0'; break;
+			}
+			cwd_path[n] = '\0';
+		}
+	} else if (*dirname == '/') {
+		strcpy(cwd_path, dirname);
+	} else {
+		if (n > 1) cwd_path[n++] = '/';
+		strcpy(cwd_path + n, dirname);
+	}
+}
+
+void do_mknod(char *fname)
+{
+    if (*fname == '\0') return;
+
+	uint32_t ino, bno;
+	uint32_t denum;
+	inode_t *inode = (inode_t *)FS_BUFF;
+	dentry_t *dir = (dentry_t *)(FS_BUFF + 512);
+	// 找当前目录
+	ino = current_running->cwd;
+	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+	bno = inode[INO2I(ino)].block[0];
+	mysdread((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);
+	// 创建文件 inode
+	int i;
+	uint32_t *imap = (uint32_t *)(FS_BUFF + 0x2000);
+	denum = inode[INO2I(ino)].size / sizeof(dentry_t);
+	inode[INO2I(ino)].size += sizeof(dentry_t);
+	inode[INO2I(ino)].mtime = get_timer();
+	mysdwrite((char *)inode, inode_addr + INO2A(ino), 512);	// 目录 inode
+	strcpy(dir[denum].fname, fname);
+	mysdread((char *)imap, imap_addr, 512);
+	for (i = 0; i < INODE_MAX_NUM; i++) {
+		if (!bit_read(imap, i)) {
+			dir[denum].ino = ino = i;
+			bit_write(imap, i, 1);
+			mysdwrite((char *)imap, imap_addr, 512);	// imap
+			break;
+		}
+	}
+	mysdwrite((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);	// 目录
+	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+	inode[INO2I(ino)].type = NORMAL;
+	inode[INO2I(ino)].w = 1;
+	inode[INO2I(ino)].r = 1;
+	inode[INO2I(ino)].ctime = inode[INO2I(ino)].mtime = get_timer();
+	inode[INO2I(ino)].size = 0;
+	inode[INO2I(ino)].reference = 0;
+	inode[INO2I(ino)].block[0] = 0;
+	mysdwrite((char *)inode, inode_addr + INO2A(ino), 512);
+}
+
+void do_cat(char *fname)
+{
+    if (*fname == '\0') return;
+	vt100_move_cursor(screen_cursor_x, screen_cursor_y);
+
+	uint32_t ino, bno;
+	uint32_t denum;
+	inode_t *inode = (inode_t *)FS_BUFF;
+	dentry_t *dir = (dentry_t *)(FS_BUFF + 512);
+	// 找当前目录
+	ino = current_running->cwd;
+	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+	bno = inode[INO2I(ino)].block[0];
+	mysdread((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);
+	// 找文件 inode
 	int i;
 	denum = inode[INO2I(ino)].size / sizeof(dentry_t);
 	for (i = 0; i < denum; i++) {
-		printkn("%s ", dir[i].fname);
+		if (!strcmp(dir[i].fname, fname)) {
+			ino = dir[i].ino;
+			break;
+		}
 	}
-	printkn("\n");
+	if (i == denum) { printkn("%s: No such file\n", fname); return; }
+	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+	// 输出
+	if (inode[INO2I(ino)].type != NORMAL) { printkn("%s is a directory.\n", fname); return; }
+	int bnum = (inode[INO2I(ino)].size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	char *block = (char *)(FS_BUFF + 512);
+	uint32_t size = inode[INO2I(ino)].size;
+	for (i = 0; i < bnum; i++) {
+		int j;
+		uint32_t tmpsize = BLOCK_SIZE;
+		if (tmpsize > size) tmpsize = size;
+		bno = inode[INO2I(ino)].block[i];
+		mysdread(block, block_addr + BNO2A(bno), BLOCK_SIZE);
+		for (j = 0; j < tmpsize; j++) {
+			printkn("%c", block[j]);
+		}
+		size -= tmpsize;
+	} 
 }
 
-void do_enter_fs(char *dirname)
+int do_fopen(char *fname, uint32_t access)
 {
-	if (*dirname != '/') return;
+    if (*fname == '\0') return -1;
+	vt100_move_cursor(screen_cursor_x, screen_cursor_y);
 
-	int level, index;
-	int denum;
 	uint32_t ino, bno;
-	inode_t *inode = (void *)FS_BUFF;
-	dentry_t *dir = (void *)(FS_BUFF + 512);
-	char path[DIR_LEVEL][FNAME_LEN];
-	level = translate_path(dirname, path);
-	// 找目录
-	ino = 0;
+	uint32_t denum;
+	inode_t *inode = (inode_t *)FS_BUFF;
+	dentry_t *dir = (dentry_t *)(FS_BUFF + 512);
+	// 找当前目录
+	ino = current_running->cwd;
 	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
-	bno = 0; index = 1;
+	bno = inode[INO2I(ino)].block[0];
 	mysdread((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);
-	while (index < level) {
-		int i;
-		denum = inode[INO2I(ino)].size / sizeof(dentry_t);
-		for (i = 0; i < denum; i++) {
-			if (!strcmp(dir[i].fname, path[index])) {
-				ino = dir[i].ino;
-				mysdread((char *)inode, inode_addr + INO2A(ino), 512);
-				bno = inode[INO2I(ino)].block[0];
-				mysdread((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);
-				index++; break;
-			}
+	// 找文件 ino
+	int i;
+	denum = inode[INO2I(ino)].size / sizeof(dentry_t);
+	for (i = 0; i < denum; i++) {
+		if (!strcmp(dir[i].fname, fname)) {
+			ino = dir[i].ino;
+			break;
 		}
-		if (i == denum) { printkn("%s: No such directory\n", path[index]); return; }
 	}
-	// 进入目录
-	if (inode[INO2I(ino)].type != DIRECTORY) { printkn("%s: Not a directory\n", path[level - 1]); return;}
-	current_running->cwd = ino;
-	strcpy(cwd_path, dirname);
+	if (i == denum) { printkn("%s: No such file\n", fname); return -1; }
+	// 创建文件描述符
+	for (i = 0; i < FDESC_NUM && fdesc_table[i].ino; i++);
+	fdesc_table[i].ino = ino;
+	fdesc_table[i].r_offset = 0;
+	fdesc_table[i].w_offset = 0;
+	fdesc_table[i].wr = access & 0x1;
+	fdesc_table[i].rd = access >> 1;
+	return i;
+}
+
+int do_fread(int fd, char *buff, int size)
+{
+	if (!fdesc_table[fd].rd) return 0;
+	int bnum;
+	inode_t *inode = (inode_t *)FS_BUFF;
+	char *block = (char *)(FS_BUFF + 512);
+    uint32_t ino = fdesc_table[fd].ino;
+	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+	if (inode[INO2I(ino)].type != NORMAL) return 0; 
+
+	int bcnt;	// 文件块计数
+	uint32_t bno;
+	uint32_t poffset = fdesc_table[fd].r_offset;
+	bcnt = poffset / BLOCK_SIZE;
+	bnum = (inode[INO2I(ino)].size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	for ( ; bcnt < bnum && size > 0; bcnt++) {
+		uint32_t tmpsize = BLOCK_SIZE - (poffset % BLOCK_SIZE);
+		if (tmpsize > size) tmpsize = size;
+		bno = inode[INO2I(ino)].block[bcnt];
+		mysdread(block, block_addr + BNO2A(bno), BLOCK_SIZE);
+		memcpy(buff, block + (poffset % BLOCK_SIZE), tmpsize);
+		poffset += tmpsize; buff += tmpsize;
+		size -= tmpsize;
+	}
+	fdesc_table[fd].r_offset = poffset;
+	return 1;
+}
+
+int do_fwrite(int fd, char *data, int size)
+{
+	if (!fdesc_table[fd].rd) return 0;
+	int bnum;
+	inode_t *inode = (inode_t *)FS_BUFF;
+	char *block = (char *)(FS_BUFF + 512);
+    uint32_t ino = fdesc_table[fd].ino;
+	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
+	if (inode[INO2I(ino)].type != NORMAL) return 0; 
+
+	int bcnt;	// 文件块计数
+	uint32_t bno;
+	uint32_t poffset = fdesc_table[fd].w_offset;
+	bcnt = poffset / BLOCK_SIZE;
+	bnum = (inode[INO2I(ino)].size + BLOCK_SIZE - 1) / BLOCK_SIZE; 
+	for ( ; size > 0; bcnt++) {
+		uint32_t tmpsize = BLOCK_SIZE - (poffset % BLOCK_SIZE);
+		if (tmpsize > size) tmpsize = size;
+		if (bcnt == bnum) {	// 分配数据块
+			uint32_t *bmap = (uint32_t *)(FS_BUFF + 0x2000);
+			mysdread((char *)bmap, bmap_addr, 512);
+			int i;
+			for (i = 0; i < BLOCK_MAX_NUM; i++) {
+				if (!bit_read(bmap, i)) {
+					bno = i;
+					bit_write(bmap, i, 1);
+					mysdwrite((char *)bmap, bmap_addr, 512);
+					break;
+				}
+			}
+			inode[INO2I(ino)].block[bcnt] = bno;
+			bnum++;
+		} else {
+			bno = inode[INO2I(ino)].block[bcnt];
+			mysdread(block, block_addr + BNO2A(bno), BLOCK_SIZE);
+		}
+		inode[INO2I(ino)].size += tmpsize;
+		memcpy(block + (poffset % BLOCK_SIZE), data, tmpsize);
+		mysdwrite(block, block_addr + BNO2A(bno), BLOCK_SIZE);
+		poffset += tmpsize; data += tmpsize;
+		size -= tmpsize;
+	}
+	inode[INO2I(ino)].mtime = get_timer();
+	mysdwrite((char *)inode, inode_addr + INO2A(ino), 512);
+	fdesc_table[fd].w_offset = poffset;
+	return 1;	
+}
+
+void do_fclose(int fd)
+{
+    fdesc_table[fd].ino = 0;
 }

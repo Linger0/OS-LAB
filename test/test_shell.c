@@ -134,7 +134,7 @@ void test_shell()
         if (ch == '\r') { // solve command
             if (--index > 0) { // Cmd[] is not empty
                 Cmd[index] = '\0';
-                if (!strcmp(Cmd, "ps")) { // ps
+                if (!strcmp(Cmd, "ps")) {                       // 1. ps
                     int found, i, status;
                     found = 0;
                     for (i = 0; i < NUM_MAX_TASK; i++) {
@@ -146,17 +146,18 @@ void test_shell()
                         }
                     }
                 }
-                else if (!strcmp(Cmd, "clear")) { // clear
-                    sys_clear(0, SPLIT_LOC - 1);
-                    sys_clear(SPLIT_LOC + 1, SCREEN_HEIGHT - 1);
+                else if (!strcmp(Cmd, "clear")) {               // 2. clear
+                    sys_clear(0, SCREEN_HEIGHT - 1);
+                    sys_move_cursor(0, SPLIT_LOC);
+                    printf(split_line);
                     sys_move_cursor(0, SPLIT_LOC + 1);
                 }
-                else if (strcmp(Cmd, "exec") == (' ' - '\0')) { // exec
+                else if (strcmp(Cmd, "exec") == ' ') {          // 3. exec
                     int n = atoi(Cmd + 5);
                     printf("EXEC: Process[%d].\n", n);
                     sys_spawn(test_tasks[n]);
                 }
-                else if (strcmp(Cmd, "kill") == (' ' - '\0')) { // kill
+                else if (strcmp(Cmd, "kill") == ' ') {          // 4. kill
                     int pid = atoi(Cmd + 5);
                     if (pid == 1) printf("ERROR: Can't kill shell.\n");
                     else {
@@ -164,25 +165,32 @@ void test_shell()
                         sys_kill(pid);
                     }
                 }
-                else if (!strcmp(Cmd, "mkfs")) {
+                // 文件系统操作
+                else if (!strcmp(Cmd, "mkfs")) {                // 5. msfs
                     sys_mkfs();
                 }
-                else if (!strcmp(Cmd, "statfs")) {
+                else if (!strcmp(Cmd, "statfs")) {              // 6. statfs
                     sys_fs_info();
                 }
-                else if (strcmp(Cmd, "mkdir") == (' ') - '\0') {
+                else if (strcmp(Cmd, "mkdir") == ' ') {         // 7. mkdir
                     sys_mkdir(Cmd + 6);
                 }
-                else if (strcmp(Cmd, "rmdir") == (' ') - '\0') {
+                else if (strcmp(Cmd, "rmdir") == ' ') {         // 8. rmdir
                     sys_rmdir(Cmd + 6);
                 }
-                else if (strcmp(Cmd, "cd") == (' ') - '\0') {
+                else if (strcmp(Cmd, "cd") == ' ') {            // 9. cd
                     sys_enter_fs(Cmd + 3);
                 }
-                else if (strcmp(Cmd, "ls") == (' ') - '\0') {
+                else if (strcmp(Cmd, "ls") == ' ') {            // 10. ls
                     sys_read_dir(Cmd + 3);
                 }
-                else if (!strcmp(Cmd, "getpid")) { // getpid
+                else if (strcmp(Cmd, "touch") == ' ') {         // 11. touch
+                    sys_mknod(Cmd + 6);
+                }
+                else if (strcmp(Cmd, "cat") == ' ') {           // 12. cat
+                    sys_cat(Cmd + 4);
+                }
+                else if (!strcmp(Cmd, "getpid")) {              // 13. getpid
                     int pid = sys_getpid();
                     printf("Shell pid=%d.\n", pid);
                 }
@@ -191,7 +199,7 @@ void test_shell()
                 }
             }
             printf(root);
-            printf(cwd_path);
+            printf("%s", cwd_path);
             printf("$ ");
             index = 0;
         }

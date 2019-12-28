@@ -8,10 +8,10 @@ static char buff[64];
 
 void test_fs(void)
 {
-    /*
     int i, j;
     int fd = sys_fopen("1.txt", O_RDWR);
 
+    sys_move_cursor(0, 0);
     for (i = 0; i < 10; i++)
     {
         sys_fwrite(fd, "hello world!\n", 13);
@@ -26,7 +26,6 @@ void test_fs(void)
         }
     }
 
-    sys_close(fd);
+    sys_fclose(fd);
     sys_exit();
-    */
 }

@@ -124,6 +124,7 @@ void do_spawn(task_info_t *task)
 	pcb[i].kernel_context.cp0_status =
 	pcb[i].user_context.cp0_status = initial_cp0_status;
 	pcb[i].user_context.cp0_epc = task->entry_point;
+	pcb[i].cwd = current_running->cwd;
 
 /*	// 初始化页目录
 	pde_t *pde = (pde_t *)pcb[i].pde_base;

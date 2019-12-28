@@ -183,3 +183,33 @@ void sys_enter_fs(char *name)
 {
     invoke_syscall(SYSCALL_ENTER_FS, (int)name, IGNORE, IGNORE);
 }
+
+void sys_mknod(char *fname)
+{
+    invoke_syscall(SYSCALL_MKNOD, (int)fname, IGNORE, IGNORE);
+}
+
+void sys_cat(char *fname)
+{
+    invoke_syscall(SYSCALL_CAT, (int)fname, IGNORE, IGNORE);
+}
+
+int sys_fopen(char *fname, uint32_t access)
+{
+    invoke_syscall(SYSCALL_FOPEN, (int)fname, (int)access, IGNORE);
+}
+
+int sys_fread(int fd, char *buff, int size)
+{
+    invoke_syscall(SYSCALL_FREAD, fd, (int)buff, size);
+}
+
+int sys_fwrite(int fd, char *data, int size)
+{
+    invoke_syscall(SYSCALL_FWRITE, fd, (int)data, size);
+}
+
+void sys_fclose(int fd)
+{
+    invoke_syscall(SYSCALL_FCLOSE, fd, IGNORE, IGNORE);
+}
