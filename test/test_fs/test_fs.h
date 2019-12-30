@@ -3,6 +3,10 @@
 
 #define O_RDWR 3
 
+extern int rd_off;
+
 void test_fs();
+void test_fs2();
+void fs_read();
 
 #endif

@@ -246,12 +246,12 @@ void do_mkdir(char *dirname)
 	}
 	mysdwrite((char *)dir, block_addr + BNO2A(bno), BLOCK_SIZE);	// 父目录
 	// bno
-	mysdread((char *)bmap, bmap_addr, 512); // size
+	mysdread((char *)bmap, bmap_addr, 512*64); // size
 	for (i = 0; i < BLOCK_MAX_NUM; i++) {
 		if (!bit_read(bmap, i)) {
 			bno = i;
 			bit_write(bmap, i, 1);
-			mysdwrite((char *)bmap, bmap_addr, 512);
+			mysdwrite((char *)bmap, bmap_addr, 512*64);
 			break;
 		}
 	}
@@ -493,7 +493,7 @@ void do_mknod(char *fname)
 	inode[INO2I(ino)].r = 1;
 	inode[INO2I(ino)].ctime = inode[INO2I(ino)].mtime = get_timer();
 	inode[INO2I(ino)].size = 0;
-	inode[INO2I(ino)].reference = 0;
+	inode[INO2I(ino)].reference = 1;
 	inode[INO2I(ino)].block[0] = 0;
 	mysdwrite((char *)inode, inode_addr + INO2A(ino), 512);
 }
@@ -525,9 +525,12 @@ void do_cat(char *fname)
 	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
 	// 输出
 	if (inode[INO2I(ino)].type != NORMAL) { printkn("%s is a directory.\n", fname); return; }
-	int bnum = (inode[INO2I(ino)].size + BLOCK_SIZE - 1) / BLOCK_SIZE;
-	char *block = (char *)(FS_BUFF + 512);
 	uint32_t size = inode[INO2I(ino)].size;
+	int bnum = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	if (bnum > I_BLOCK_NUM) bnum = I_BLOCK_NUM;
+	size = inode[INO2I(ino)].size;
+	char *block = (char *)(FS_BUFF + 0x2000);
+	// 小块
 	for (i = 0; i < bnum; i++) {
 		int j;
 		uint32_t tmpsize = BLOCK_SIZE;
@@ -539,6 +542,41 @@ void do_cat(char *fname)
 		}
 		size -= tmpsize;
 	} 
+	// 大块
+	if (size == 0) return;
+	uint32_t *chunk_t = (uint32_t *)(FS_BUFF + 0x1000);
+	bno = inode[INO2I(ino)].chunk_t1;
+	mysdread((char *)chunk_t, block_addr + BNO2A(bno), BLOCK_SIZE);
+	int chnum = (size + CHUNK_SIZE - 1) / CHUNK_SIZE;
+	if (chnum > 1024) chnum = 1024;
+	for (i = 0; i < chnum; i++) {
+		int j;
+		uint32_t tmpsize = CHUNK_SIZE;
+		if (tmpsize > size) tmpsize = size;
+		bno = chunk_t[i];
+		mysdread(block, block_addr + BNO2A(bno), CHUNK_SIZE);
+		for (j = 0; j < tmpsize; j++) {
+			printkn("%c", block[j]);
+		}
+		size -= tmpsize;
+	}
+	// 大块
+	if (size == 0) return;
+	bno = inode[INO2I(ino)].chunk_t2;
+	mysdread((char *)chunk_t, block_addr + BNO2A(bno), BLOCK_SIZE);
+	chnum = (size + CHUNK_SIZE - 1) / CHUNK_SIZE;
+	if (chnum > 1024) chnum = 1024;
+	for (i = 0; i < chnum; i++) {
+		int j;
+		uint32_t tmpsize = CHUNK_SIZE;
+		if (tmpsize > size) tmpsize = size;
+		bno = chunk_t[i];
+		mysdread(block, block_addr + BNO2A(bno), CHUNK_SIZE);
+		for (j = 0; j < tmpsize; j++) {
+			printkn("%c", block[j]);
+		}
+		size -= tmpsize;
+	}
 }
 
 int do_fopen(char *fname, uint32_t access)
@@ -577,10 +615,10 @@ int do_fopen(char *fname, uint32_t access)
 
 int do_fread(int fd, char *buff, int size)
 {
-	if (!fdesc_table[fd].rd) return 0;
+	if (fd < 0 || !fdesc_table[fd].rd) return 0;
 	int bnum;
 	inode_t *inode = (inode_t *)FS_BUFF;
-	char *block = (char *)(FS_BUFF + 512);
+	char *block = (char *)(FS_BUFF + 0x2000);
     uint32_t ino = fdesc_table[fd].ino;
 	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
 	if (inode[INO2I(ino)].type != NORMAL) return 0; 
@@ -590,6 +628,8 @@ int do_fread(int fd, char *buff, int size)
 	uint32_t poffset = fdesc_table[fd].r_offset;
 	bcnt = poffset / BLOCK_SIZE;
 	bnum = (inode[INO2I(ino)].size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	if (bnum > I_BLOCK_NUM) bnum = I_BLOCK_NUM;
+	// 小块
 	for ( ; bcnt < bnum && size > 0; bcnt++) {
 		uint32_t tmpsize = BLOCK_SIZE - (poffset % BLOCK_SIZE);
 		if (tmpsize > size) tmpsize = size;
@@ -600,15 +640,47 @@ int do_fread(int fd, char *buff, int size)
 		size -= tmpsize;
 	}
 	fdesc_table[fd].r_offset = poffset;
+	// 大块
+	if (size == 0) return 1;
+	uint32_t chcnt = (poffset - I_BLOCK_NUM * BLOCK_SIZE) / CHUNK_SIZE;
+	uint32_t *chunk_t = (uint32_t *)(FS_BUFF + 0x1000);
+	bno = inode[INO2I(ino)].chunk_t1;
+	mysdread((char *)chunk_t, block_addr + BNO2A(bno), BLOCK_SIZE);
+	for ( ; chcnt < 1024 && size > 0; chcnt++) {
+		uint32_t tmpsize = CHUNK_SIZE - (poffset % CHUNK_SIZE);
+		if (tmpsize > size) tmpsize = size;
+		bno = chunk_t[chcnt];
+		mysdread(block, block_addr + BNO2A(bno), CHUNK_SIZE);
+		memcpy(buff, block + (poffset % BLOCK_SIZE), tmpsize);
+		poffset += tmpsize; buff += tmpsize;
+		size -= tmpsize;
+	}	
+	fdesc_table[fd].r_offset = poffset;
+	// 大块
+	if (size == 0) return 1;
+	chcnt = (poffset - I_BLOCK_NUM * BLOCK_SIZE - CHUNK_SIZE) / CHUNK_SIZE - 1024;
+	bno = inode[INO2I(ino)].chunk_t2;
+	mysdread((char *)chunk_t, block_addr + BNO2A(bno), BLOCK_SIZE);
+	for ( ; chcnt < 1024 && size > 0; chcnt++) {
+		uint32_t tmpsize = CHUNK_SIZE - (poffset % CHUNK_SIZE);
+		if (tmpsize > size) tmpsize = size;
+		bno = chunk_t[chcnt];
+		mysdread(block, block_addr + BNO2A(bno), CHUNK_SIZE);
+		memcpy(buff, block + (poffset % BLOCK_SIZE), tmpsize);
+		poffset += tmpsize; buff += tmpsize;
+		size -= tmpsize;
+	}
+	fdesc_table[fd].r_offset = poffset;
 	return 1;
 }
 
 int do_fwrite(int fd, char *data, int size)
 {
-	if (!fdesc_table[fd].rd) return 0;
+	if (fd < 0 || !fdesc_table[fd].rd) return 0;
+
 	int bnum;
 	inode_t *inode = (inode_t *)FS_BUFF;
-	char *block = (char *)(FS_BUFF + 512);
+	char *block = (char *)(FS_BUFF + 0x2000);
     uint32_t ino = fdesc_table[fd].ino;
 	mysdread((char *)inode, inode_addr + INO2A(ino), 512);
 	if (inode[INO2I(ino)].type != NORMAL) return 0; 
@@ -616,20 +688,20 @@ int do_fwrite(int fd, char *data, int size)
 	int bcnt;	// 文件块计数
 	uint32_t bno;
 	uint32_t poffset = fdesc_table[fd].w_offset;
+	uint32_t *bmap = (uint32_t *)(FS_BUFF + 0x40000);
+	int index = 0;
 	bcnt = poffset / BLOCK_SIZE;
 	bnum = (inode[INO2I(ino)].size + BLOCK_SIZE - 1) / BLOCK_SIZE; 
-	for ( ; size > 0; bcnt++) {
+	mysdread((char *)bmap, bmap_addr, 512*64);
+	// 小块
+	for ( ; bcnt < I_BLOCK_NUM && size > 0; bcnt++) {
 		uint32_t tmpsize = BLOCK_SIZE - (poffset % BLOCK_SIZE);
 		if (tmpsize > size) tmpsize = size;
-		if (bcnt == bnum) {	// 分配数据块
-			uint32_t *bmap = (uint32_t *)(FS_BUFF + 0x2000);
-			mysdread((char *)bmap, bmap_addr, 512);
-			int i;
-			for (i = 0; i < BLOCK_MAX_NUM; i++) {
-				if (!bit_read(bmap, i)) {
-					bno = i;
-					bit_write(bmap, i, 1);
-					mysdwrite((char *)bmap, bmap_addr, 512);
+		if (bcnt >= bnum) {	// 分配数据块
+			for ( ; index < BLOCK_MAX_NUM; index++) {
+				if (!bit_read(bmap, index)) {
+					bno = index;
+					bit_write(bmap, index, 1);
 					break;
 				}
 			}
@@ -639,13 +711,104 @@ int do_fwrite(int fd, char *data, int size)
 			bno = inode[INO2I(ino)].block[bcnt];
 			mysdread(block, block_addr + BNO2A(bno), BLOCK_SIZE);
 		}
-		inode[INO2I(ino)].size += tmpsize;
+		if (inode[INO2I(ino)].size < poffset + tmpsize) inode[INO2I(ino)].size = poffset + tmpsize;
 		memcpy(block + (poffset % BLOCK_SIZE), data, tmpsize);
 		mysdwrite(block, block_addr + BNO2A(bno), BLOCK_SIZE);
 		poffset += tmpsize; data += tmpsize;
 		size -= tmpsize;
 	}
+	// 大块
+	if (size == 0) goto end;
+	uint32_t chcnt = (poffset - I_BLOCK_NUM * BLOCK_SIZE) / CHUNK_SIZE;
+	uint32_t *chunk_t = (uint32_t *)(FS_BUFF + 0x1000);
+	uint32_t chnum = (inode[INO2I(ino)].size + CHUNK_SIZE - 1 - I_BLOCK_NUM * BLOCK_SIZE) / CHUNK_SIZE; 
+	if (chnum == 0) {	// 分配 chunk table
+		int i;
+		for (i = 0 ; i < BLOCK_MAX_NUM; i++) {
+			if (!bit_read(bmap, i)) {
+				bno = i;
+				bit_write(bmap, i, 1);
+				inode[INO2I(ino)].chunk_t1 = bno;
+				break;
+			}
+		}
+	} else {
+		bno = inode[INO2I(ino)].chunk_t1;
+		mysdread((char *)chunk_t, block_addr + BNO2A(bno), BLOCK_SIZE);
+	}
+	index = 0;
+	for ( ; chcnt < 1024 && size > 0; chcnt++) {
+		uint32_t tmpsize = CHUNK_SIZE - (poffset % CHUNK_SIZE);
+		if (tmpsize > size) tmpsize = size;
+		if (chcnt >= chnum) {	// 分配数据块
+			for ( ; index < BLOCK_MAX_NUM / 32; index++) {
+				if (bmap[index] == 0x0) {
+					bno = index * 32;
+					bmap[index] = 0xffffffff;
+					break;
+				}
+			}
+			chunk_t[chcnt] = bno;
+			chnum++;
+		} else {
+			bno = chunk_t[chcnt];
+			mysdread(block, block_addr + BNO2A(bno), CHUNK_SIZE);
+		}
+		if (inode[INO2I(ino)].size < poffset + tmpsize) inode[INO2I(ino)].size = poffset + tmpsize;
+		memcpy(block + (poffset % BLOCK_SIZE), data, tmpsize);
+		mysdwrite(block, block_addr + BNO2A(bno), CHUNK_SIZE);
+		poffset += tmpsize; data += tmpsize;
+		size -= tmpsize;
+	}
+	bno = inode[INO2I(ino)].chunk_t1;
+	mysdwrite((char *)chunk_t, block_addr + BNO2A(bno), BLOCK_SIZE);
+	// 大块
+	if (size == 0) goto end;
+	chcnt = (poffset - I_BLOCK_NUM * BLOCK_SIZE) / CHUNK_SIZE - 1024;
+	chunk_t = (uint32_t *)(FS_BUFF + 0x1000);
+	chnum = (inode[INO2I(ino)].size + CHUNK_SIZE - 1 - I_BLOCK_NUM * BLOCK_SIZE) / CHUNK_SIZE - 1024; 
+	if (chnum == 0) {	// 分配 chunk table
+		int i;
+		for (i = 0 ; i < BLOCK_MAX_NUM; i++) {
+			if (!bit_read(bmap, i)) {
+				bno = i;
+				bit_write(bmap, i, 1);
+				inode[INO2I(ino)].chunk_t1 = bno;
+				break;
+			}
+		}
+	} else {
+		bno = inode[INO2I(ino)].chunk_t2;
+		mysdread((char *)chunk_t, block_addr + BNO2A(bno), BLOCK_SIZE);
+	}
+	for ( ; chcnt < 1024 && size > 0; chcnt++) {
+		uint32_t tmpsize = CHUNK_SIZE - (poffset % CHUNK_SIZE);
+		if (tmpsize > size) tmpsize = size;
+		if (chcnt >= chnum) {	// 分配数据块
+			for ( ; index < BLOCK_MAX_NUM / 32; index++) {
+				if (bmap[index] == 0) {
+					bno = index * 32;
+					bmap[index] = 0xffffffff;
+					break;
+				}
+			}
+			chunk_t[chcnt] = bno;
+			chnum++;
+		} else {
+			bno = chunk_t[chcnt];
+			mysdread(block, block_addr + BNO2A(bno), CHUNK_SIZE);
+		}
+		if (inode[INO2I(ino)].size < poffset + tmpsize) inode[INO2I(ino)].size = poffset + tmpsize;
+		memcpy(block + (poffset % BLOCK_SIZE), data, tmpsize);
+		mysdwrite(block, block_addr + BNO2A(bno), CHUNK_SIZE);
+		poffset += tmpsize; data += tmpsize;
+		size -= tmpsize;
+	}
+	bno = inode[INO2I(ino)].chunk_t2;
+	mysdwrite((char *)chunk_t, block_addr + BNO2A(bno), BLOCK_SIZE);
+end:
 	inode[INO2I(ino)].mtime = get_timer();
+	mysdwrite((char *)bmap, bmap_addr, 512*64);
 	mysdwrite((char *)inode, inode_addr + INO2A(ino), 512);
 	fdesc_table[fd].w_offset = poffset;
 	return 1;	
@@ -653,5 +816,13 @@ int do_fwrite(int fd, char *data, int size)
 
 void do_fclose(int fd)
 {
+	if (fd < 0) return;
     fdesc_table[fd].ino = 0;
+}
+
+int do_fseek(int fd, int pos)
+{
+	if (fd < 0) return 0;
+	fdesc_table[fd].r_offset = pos;
+	return 1;
 }

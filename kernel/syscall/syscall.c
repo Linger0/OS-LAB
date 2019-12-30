@@ -213,3 +213,8 @@ void sys_fclose(int fd)
 {
     invoke_syscall(SYSCALL_FCLOSE, fd, IGNORE, IGNORE);
 }
+
+int sys_fseek(int fd, int pos)
+{
+    invoke_syscall(SYSCALL_FSEEK, fd, pos, IGNORE);
+}

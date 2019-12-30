@@ -20,7 +20,9 @@
 #define INODE_MAX_NUM 0x1000    // 2^12
 #define BLOCK_MAX_NUM 0x40000   // 2^18 * 4KB = 1GB 
 #define BLOCK_SIZE 0x1000       // 4KB
-#define I_BLOCK_NUM 10
+#define CHUNK_SIZE 0x20000      // 128KB
+#define I_BLOCK_NUM 9
+#define I_CTABLE 2
 #define FNAME_LEN 11
 
 #define DIR_LEVEL 4
@@ -51,15 +53,16 @@ typedef struct superblock
 
 typedef struct inode
 {
-    uint32_t type : 16;    // mode: 文件类型
-    uint32_t w : 1;        //       write 权限
-    uint32_t r : 1;        //       read 权限
-    uint32_t reference;          // 硬链接数
-    uint32_t ctime;              // 创建时间
-    uint32_t mtime;              // 最近修改时间
-    uint32_t size;               // 文件大小
-    uint32_t block[I_BLOCK_NUM]; // 数据块表
-    uint32_t chunk_table;        // 一级间接索引表
+    uint32_t type : 16;       // mode: 文件类型
+    uint32_t w : 1;           //       write 权限
+    uint32_t r : 1;           //       read 权限
+    int reference;                  // 硬链接数
+    uint32_t ctime;                 // 创建时间
+    uint32_t mtime;                 // 最近修改时间
+    uint32_t size;                  // 文件大小
+    uint32_t block[I_BLOCK_NUM];    // 数据块表
+    uint32_t chunk_t1;              // 一级间接索引表(32*4KB)
+    uint32_t chunk_t2;              // 一级间接索引表
 } inode_t; /* (6 + 10) * 4B = 64B */
 
 typedef struct dentry
@@ -94,5 +97,6 @@ int do_fopen(char *, uint32_t);
 int do_fread(int, char *, int);
 int do_fwrite(int, char *, int);
 void do_fclose(int);
+int do_fseek(int, int);
 
 #endif

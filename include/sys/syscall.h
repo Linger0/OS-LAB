@@ -90,6 +90,7 @@
 #define SYSCALL_FREAD 54
 #define SYSCALL_FWRITE 55
 #define SYSCALL_FCLOSE 56
+#define SYSCALL_FSEEK 57
 
 /* syscall function pointer */
 int (*syscall[NUM_SYSCALLS])();
@@ -149,5 +150,6 @@ int sys_fopen(char *, uint32_t);
 int sys_fread(int, char *, int);
 int sys_fwrite(int, char *, int);
 void sys_fclose(int);
+int sys_fseek(int, int);
 
 #endif

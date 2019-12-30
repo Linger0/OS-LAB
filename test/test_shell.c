@@ -80,10 +80,12 @@ unsigned long htoi(char *str) {
 */
 // test_net
 struct task_info task1 = {"task1", (uint32_t)&test_fs, USER_PROCESS};
+struct task_info task2 = {"task2", (uint32_t)&test_fs2, USER_PROCESS};
+struct task_info task3 = {"read", (uint32_t)&fs_read, USER_PROCESS};
 
-static struct task_info *test_tasks[1] = {&task1};
+static struct task_info *test_tasks[3] = {&task1, &task2, &task3};
 
-static int num_test_tasks = 1;
+static int num_test_tasks = 3;
 
 // Shell
 static char split_line[] = "------------------- COMMAND -------------------";
@@ -154,6 +156,7 @@ void test_shell()
                 }
                 else if (strcmp(Cmd, "exec") == ' ') {          // 3. exec
                     int n = atoi(Cmd + 5);
+                    if (n == 2) rd_off = atoi(Cmd + 7);
                     printf("EXEC: Process[%d].\n", n);
                     sys_spawn(test_tasks[n]);
                 }

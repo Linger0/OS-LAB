@@ -155,6 +155,7 @@ static void init_syscall(void)
 	syscall[SYSCALL_FREAD] = (int (*)())do_fread;
 	syscall[SYSCALL_FWRITE] = (int (*)())do_fwrite;
 	syscall[SYSCALL_FCLOSE] = (int (*)())do_fclose;
+	syscall[SYSCALL_FSEEK] = (int (*)())do_fseek;
 }
 
 // jump from bootloader.
