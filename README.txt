@@ -13,6 +13,10 @@
    |   |--fs.h                        : 文件系统头文件（包含磁盘布局和数据结构）
    |--kernel/fs/
    |   |--filesystem.c                : 文件系统、目录和文件操作
+   |--test/
+   |   |--test_shell.c                : shell
+   |   |--test_fs/
+   |   |   |--test_fs.c               : 增加两个task测试大文件
    |--README.txt                      : 本文档
 
 ===================== Project 5 - Device Driver ===================================================

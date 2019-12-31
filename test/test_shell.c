@@ -187,6 +187,10 @@ void test_shell()
                 else if (strcmp(Cmd, "ls") == ' ') {            // 10. ls
                     sys_read_dir(Cmd + 3);
                 }
+                else if (!strcmp(Cmd, "ls")) {
+                    strcpy(Cmd + 3, ".");
+                    sys_read_dir(Cmd + 3);
+                }
                 else if (strcmp(Cmd, "touch") == ' ') {         // 11. touch
                     sys_mknod(Cmd + 6);
                 }

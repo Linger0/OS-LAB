@@ -37,10 +37,10 @@ void test_fs2(void)
     int fd = sys_fopen("2.txt", O_RDWR);
 
     sys_move_cursor(0, 0);
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < 512; i++)
     {
         sys_fwrite(fd, buf, 4096);
-        if (i % 2) printf("ok: %d\n", i);
+        if (i % 64) printf("ok: %d\n", i);
     }
 
     sys_fseek(fd, 15*4096);
